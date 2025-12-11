@@ -433,4 +433,172 @@ body {
 .table thead th {
     background: linear-gradient(to right, var(--primary), var(--secondary));
     color: white;
-   
+    border: none;
+    padding: 18px 15px;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+}
+
+.table tbody tr {
+    transition: var(--transition);
+}
+
+.table tbody tr:hover {
+    background-color: rgba(67, 97, 238, 0.05);
+}
+
+.table tbody td {
+    padding: 15px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+
+/* Status Badges in Table */
+.badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.badge-success {
+    background: linear-gradient(to right, #4cc9f0, #4361ee);
+    color: white;
+}
+
+.badge-warning {
+    background: linear-gradient(to right, #ff9e00, #ff9100);
+    color: white;
+}
+
+.badge-danger {
+    background: linear-gradient(to right, #f72585, #b5179e);
+    color: white;
+}
+
+/* Export Section */
+.export-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    padding: 25px;
+    border-left: 5px solid var(--success);
+}
+
+.export-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+/* Footer */
+.app-footer {
+    background: var(--dark);
+    color: white;
+    padding: 25px 0;
+    text-align: center;
+    margin-top: auto;
+}
+
+.footer-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.app-footer p {
+    margin-bottom: 10px;
+    opacity: 0.9;
+}
+
+.app-footer small {
+    opacity: 0.7;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .app-header h1 {
+        font-size: 2.3rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .app-container {
+        border-radius: 12px;
+    }
+    
+    .app-header {
+        padding: 30px 0;
+    }
+    
+    .app-header h1 {
+        font-size: 2rem;
+    }
+    
+    .logo {
+        font-size: 3rem;
+    }
+    
+    .main-content {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    .app-header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .subtitle {
+        font-size: 1rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .export-buttons {
+        flex-direction: column;
+    }
+    
+    .export-buttons .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .app-header,
+    .action-buttons,
+    .export-section,
+    .app-footer {
+        display: none !important;
+    }
+    
+    .app-container {
+        box-shadow: none;
+        background: white;
+    }
+    
+    .main-content {
+        padding: 0;
+    }
+    
+    .table {
+        width: 100% !important;
+    }
+}
