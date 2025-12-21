@@ -96,9 +96,7 @@
       font-size:12px;
       user-select:none;
     }
-    .foot b{
-      color:#0f172a;
-    }
+    .foot b{color:#0f172a;}
   </style>
 </head>
 
@@ -106,13 +104,14 @@
   <div class="wrap">
     <div class="card">
       <div class="title"><div class="icon">⇄</div><div>Chuyển Đổi Địa Chỉ Cũ → Mới</div></div>
-      <div class="sub">Hàng loạt • mỗi dòng 1 địa chỉ • giữ số nhà/đường/ấp</div>
+      <div class="sub">Hàng loạt • mỗi dòng 1 địa chỉ • giữ số nhà/đường/ấp • viết tắt vẫn hiểu</div>
 
       <label>Danh sách địa chỉ (mỗi dòng 1 địa chỉ):</label>
       <textarea id="batchInput" placeholder="Ví dụ:
-số 34 ấp Bình Long, xã thanh bình, huyện chợ gạo, tỉnh tiền giang
-phường 12, quận gò vấp, tp hcm
-p.15 - q.10 - tp.hcm"></textarea>
+34 ấp Bình Long, xã thanh bình, huyện chợ gạo, tỉnh tiền giang
+P4, Q3, TP.HCM
+tphn, q1, p2
+q10 - p15 - tphcm"></textarea>
 
       <button id="btnBatch" class="btn">⇄ Chuyển đổi hàng loạt</button>
 
@@ -187,6 +186,12 @@ p.15 - q.10 - tp.hcm"></textarea>
       .replace(/đ/g, "d").replace(/Đ/g, "D");
   }
 
+  function tachChuSoDinhNhau(s){
+    return (s || "")
+      .replace(/([a-zA-ZÀ-ỹĐđ])(\d)/g, "$1 $2")
+      .replace(/(\d)([a-zA-ZÀ-ỹĐđ])/g, "$1 $2");
+  }
+
   function chuanHoaDauCach(s){
     return chuanHoaText((s || "")
       .replace(/[|;/]+/g, ",")
@@ -195,18 +200,31 @@ p.15 - q.10 - tp.hcm"></textarea>
       .replace(/\s*,\s*/g, ", "));
   }
 
+  // ✅ Viết tắt: TP.HCM / tphcm / tphn / tpHN / q3 / p4 ... đều hiểu
   function moRongVietTat(s){
-    let x = " " + (s || "") + " ";
-    const reps = [
-      [/\btp\.?\b/gi, "thành phố"],
-      [/\bt\.p\.?\b/gi, "thành phố"],
-      [/\bq\.?\b/gi, "quận"],
-      [/\bh\.?\b/gi, "huyện"],
-      [/\bp\.?\b/gi, "phường"],
-      [/\btx\.?\b/gi, "thị xã"],
-      [/\btt\.?\b/gi, "thị trấn"],
-    ];
-    reps.forEach(([re, to]) => x = x.replace(re, " " + to + " "));
+    let x = " " + tachChuSoDinhNhau(s || "") + " ";
+    x = x.replace(/\s*\.\s*/g, ".").replace(/\s+/g, " ");
+
+    // TP đặc biệt
+    x = x.replace(/\b(tp\.?\s*hcm|tphcm|tp\.?\s*ho\s*chi\s*minh)\b/gi, " thành phố hồ chí minh ");
+    x = x.replace(/\b(tp\.?\s*hn|tphn|tp\.?\s*ha\s*noi|tphanoi)\b/gi, " thành phố hà nội ");
+    x = x.replace(/\b(tp\.?\s*dn|tp\.?\s*da\s*nang|tpdanang)\b/gi, " thành phố đà nẵng ");
+    x = x.replace(/\b(tp\.?\s*hp|tp\.?\s*hai\s*phong|tphaiphong|tphiphong)\b/gi, " thành phố hải phòng ");
+    x = x.replace(/\b(tp\.?\s*ct|tp\.?\s*can\s*tho|tpcantho)\b/gi, " thành phố cần thơ ");
+
+    // Quận: q1..q99, quan1
+    x = x.replace(/\bq\.?\s*(\d+)\b/gi, " quận $1 ");
+    x = x.replace(/\bquan\s*(\d+)\b/gi, " quận $1 ");
+
+    // Phường: p1..p99, phuong1
+    x = x.replace(/\bp\.?\s*(\d+)\b/gi, " phường $1 ");
+    x = x.replace(/\bphuong\s*(\d+)\b/gi, " phường $1 ");
+
+    // khác
+    x = x.replace(/\btx\.?\b/gi, " thị xã ");
+    x = x.replace(/\btt\.?\b/gi, " thị trấn ");
+    x = x.replace(/\bh\.?\b/gi, " huyện ");
+
     return chuanHoaText(x);
   }
 
@@ -398,7 +416,6 @@ p.15 - q.10 - tp.hcm"></textarea>
     setStatus("ok", "Đã copy dạng Excel", "Dán vào Excel sẽ ra 2 cột: Cũ | Mới");
   });
 
-  // ✅ Copy đúng cái bảng đang hiển thị (4 cột: #, cũ, mới, trạng thái)
   $("btnCopyResult").addEventListener("click", async () => {
     if(!lastBatch) return;
     const header = "#\tĐịa chỉ cũ\tĐịa chỉ mới\tTrạng thái";
@@ -413,4 +430,3 @@ p.15 - q.10 - tp.hcm"></textarea>
 </script>
 </body>
 </html>
-
