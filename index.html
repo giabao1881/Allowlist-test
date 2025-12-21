@@ -3,359 +3,454 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>baotg10 | Đổi địa chỉ cũ → mới (vietnam-address-converter)</title>
+  <title>Chuyển Đổi Địa Chỉ Cũ → Mới</title>
 
-  <!-- Browser build của vietnam-address-converter -->
+  <!-- Vietnam Address Converter (browser build) -->
   <script src="https://unpkg.com/vietnam-address-converter@latest/dist/index.browser.js"></script>
 
   <style>
     :root{
-      color-scheme: dark;
-      --bg0:#070b14; --bg1:#0b1220;
-      --card: rgba(255,255,255,.06);
-      --border: rgba(255,255,255,.12);
-      --text:#e5e7eb; --muted:#94a3b8;
-      --p1:#3b82f6; --p2:#8b5cf6; --p3:#ec4899;
-      --ok:#22c55e; --err:#ef4444; --warn:#f59e0b;
-      --shadow: 0 18px 60px rgba(0,0,0,.55);
-      --r:18px; --r2:12px;
-      --w: 1040px;
+      --bg1:#5b5fd6;
+      --bg2:#7d4bb7;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#475569;
+      --line:#e2e8f0;
+      --primary:#6c63ff;
+      --primary2:#7c3aed;
+      --okBg:#eafff0;
+      --okBorder:#a7f3d0;
+      --okText:#166534;
+      --warnBg:#fff7ed;
+      --warnBorder:#fed7aa;
+      --warnText:#9a3412;
+      --errBg:#fff1f2;
+      --errBorder:#fecdd3;
+      --errText:#9f1239;
+      --shadow: 0 18px 60px rgba(15,23,42,.25);
+      --r:26px;
+      --r2:16px;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
       --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
     }
     *{box-sizing:border-box}
     body{
-      margin:0; font-family:var(--sans); color:var(--text);
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:22px;
       background:
-        radial-gradient(900px 500px at 15% 10%, rgba(59,130,246,.20), transparent 60%),
-        radial-gradient(900px 500px at 85% 20%, rgba(139,92,246,.18), transparent 60%),
-        radial-gradient(900px 500px at 50% 95%, rgba(236,72,153,.10), transparent 55%),
-        linear-gradient(180deg, var(--bg0), var(--bg1));
-      min-height:100vh; display:flex; justify-content:center; padding:26px;
+        radial-gradient(900px 520px at 15% 15%, rgba(255,255,255,.22), transparent 55%),
+        radial-gradient(900px 520px at 80% 10%, rgba(255,255,255,.18), transparent 55%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
     }
-    .wrap{width:min(var(--w),100%);}
-    .top{display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:14px;}
-    .brand{display:flex; align-items:center; gap:12px;}
-    .logo{
-      width:44px; height:44px; border-radius:14px;
-      background: linear-gradient(135deg, var(--p1), var(--p2), var(--p3));
-      box-shadow: 0 18px 40px rgba(0,0,0,.35);
-      position:relative;
-    }
-    .logo:after{
-      content:""; position:absolute; inset:2px; border-radius:12px;
-      background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.38), transparent 45%),
-                  radial-gradient(circle at 70% 65%, rgba(255,255,255,.20), transparent 45%),
-                  rgba(0,0,0,.10);
-      mix-blend-mode: screen;
-    }
-    h1{font-size:18px; margin:0; letter-spacing:.2px}
-    .sub{color:var(--muted); font-size:13px; margin-top:3px}
-    .pill{
-      display:flex; gap:8px; align-items:center;
-      padding:10px 12px; border-radius:999px;
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.05);
-      box-shadow: var(--shadow);
-      font-size:12px;
-    }
-    .pill .mono{font-family:var(--mono)}
+    .wrap{width:min(980px,100%);}
     .card{
-      border:1px solid var(--border);
-      background: linear-gradient(180deg, var(--card), rgba(255,255,255,.03));
-      border-radius: var(--r);
+      background:var(--card);
+      border-radius:var(--r);
       box-shadow: var(--shadow);
-      overflow:hidden;
+      padding:24px;
     }
-    .head{
-      padding:14px 16px;
-      background: linear-gradient(90deg, rgba(59,130,246,.12), rgba(139,92,246,.10), rgba(236,72,153,.10));
-      border-bottom:1px solid var(--border);
-      display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;
-    }
-    .tabs{display:flex; gap:8px; flex-wrap:wrap;}
-    .tab{
-      cursor:pointer; user-select:none;
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.05);
-      color: var(--text);
-      padding:8px 10px; border-radius:999px;
-      font-size:13px;
-    }
-    .tab.active{border-color: rgba(59,130,246,.45); background: rgba(59,130,246,.14);}
-    .body{padding:16px;}
-    .grid{display:grid; grid-template-columns: 1.1fr 1fr; gap:14px;}
-    @media (max-width: 980px){ .grid{grid-template-columns:1fr;} }
-    .box{
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.04);
-      border-radius: var(--r2);
-      padding:12px;
-    }
-    .box h2{margin:0 0 10px 0; font-size:14px; letter-spacing:.2px;}
-    label{display:block; font-size:12px; color:var(--muted); margin:0 0 6px}
-    textarea, input{
-      width:100%;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.22);
-      color: var(--text);
-      border-radius: 12px;
-      padding:10px 10px;
-      outline:none;
-      font-size:14px;
-    }
-    textarea{min-height:130px; resize:vertical; line-height:1.4}
-    input:focus, textarea:focus{
-      border-color: rgba(59,130,246,.55);
-      box-shadow: 0 0 0 3px rgba(59,130,246,.18);
-    }
-    .btns{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
-    button{
-      cursor:pointer;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      padding:10px 12px;
-      border-radius: 12px;
-      font-weight:700;
+    .title{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      font-size:30px;
+      font-weight:850;
+      margin:6px 0 18px;
       letter-spacing:.2px;
     }
-    button.primary{
+    .icon{
+      width:42px;height:42px;border-radius:14px;
+      display:grid;place-items:center;
+      background: linear-gradient(135deg, var(--primary), var(--primary2));
+      color:#fff;
+      box-shadow: 0 14px 30px rgba(124,58,237,.25);
+      user-select:none;
+    }
+
+    .tabs{
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      flex-wrap:wrap;
+      margin: 6px 0 16px;
+    }
+    .tab{
+      border:1px solid var(--line);
+      background:#f8fafc;
+      padding:10px 14px;
+      border-radius:999px;
+      font-weight:700;
+      cursor:pointer;
+      color:#0f172a;
+    }
+    .tab.active{
+      background: rgba(108,99,255,.12);
+      border-color: rgba(108,99,255,.30);
+    }
+
+    label{
+      display:block;
+      font-weight:700;
+      color:#0f172a;
+      margin:10px 0 8px;
+    }
+
+    .input, textarea{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:14px 14px;
+      font-size:16px;
+      outline:none;
+      background:#fff;
+      box-shadow: 0 6px 18px rgba(15,23,42,.06);
+    }
+    textarea{min-height:160px; resize:vertical; line-height:1.4;}
+    .input:focus, textarea:focus{
+      border-color: rgba(108,99,255,.50);
+      box-shadow: 0 0 0 4px rgba(108,99,255,.14), 0 6px 18px rgba(15,23,42,.06);
+    }
+
+    .btn{
+      width:100%;
+      margin-top:16px;
       border:none;
-      background: linear-gradient(135deg, var(--p1), var(--p2));
-      box-shadow: 0 14px 30px rgba(59,130,246,.18);
+      border-radius:14px;
+      padding:15px 16px;
+      font-size:16px;
+      font-weight:850;
+      color:#fff;
+      cursor:pointer;
+      background: linear-gradient(90deg, var(--primary), var(--primary2));
+      box-shadow: 0 14px 30px rgba(108,99,255,.25);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
     }
-    button.danger{border-color: rgba(239,68,68,.45); background: rgba(239,68,68,.10)}
-    button:disabled{opacity:.55; cursor:not-allowed}
-    .hint{font-size:12px; color:var(--muted); margin-top:8px; line-height:1.5}
-    .status{
-      margin-top:10px;
+    .btn:disabled{opacity:.55; cursor:not-allowed}
+
+    .row{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top:12px;
+    }
+    .miniBtn{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:12px;
       padding:10px 12px;
-      border-radius: 12px;
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.04);
-      font-size:13px;
-      line-height:1.45;
-      white-space:pre-wrap;
-      word-break:break-word;
-      font-family: var(--mono);
+      cursor:pointer;
+      font-weight:800;
+      color:#0f172a;
     }
-    .ok{border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.10)}
-    .err{border-color: rgba(239,68,68,.38); background: rgba(239,68,68,.10)}
-    .warn{border-color: rgba(245,158,11,.38); background: rgba(245,158,11,.10)}
-    .result{font-family:var(--sans); white-space:normal}
-    .line{margin:8px 0}
-    .k{color:var(--muted)}
-    .v{font-weight:800}
-    .mono{font-family:var(--mono)}
-    .table{
-      width:100%; border-collapse:separate; border-spacing:0;
-      overflow:hidden; border-radius: 12px;
-      border:1px solid rgba(255,255,255,.10);
+
+    .hint{
       margin-top:10px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
     }
-    .table th,.table td{
-      padding:10px 10px; font-size:13px; border-bottom:1px solid rgba(255,255,255,.08);
+
+    .box{
+      margin-top:18px;
+      border-radius:var(--r2);
+      border:1px solid var(--line);
+      overflow:hidden;
+    }
+    .boxHead{
+      padding:14px 16px;
+      font-weight:900;
+      background:#f8fafc;
+      border-bottom:1px solid var(--line);
+    }
+    .status{
+      padding:14px 16px;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+    }
+    .badge{
+      width:22px;height:22px;border-radius:999px;
+      display:grid;place-items:center;
+      font-weight:900;
+      flex:0 0 auto;
+    }
+    .ok{background:var(--okBg); border:1px solid var(--okBorder); color:var(--okText);}
+    .warn{background:var(--warnBg); border:1px solid var(--warnBorder); color:var(--warnText);}
+    .err{background:var(--errBg); border:1px solid var(--errBorder); color:var(--errText);}
+    .msg{font-weight:800;}
+    .submsg{margin-top:4px; color:rgba(15,23,42,.70); font-weight:650;}
+
+    .resultGrid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+      padding:16px;
+      background:#fff;
+    }
+    .panel{
+      border-radius:14px;
+      border:1px solid var(--line);
+      padding:12px 14px;
+      background:#f8fafc;
+    }
+    .panel.green{
+      background: #ecfdf3;
+      border-color: #86efac;
+    }
+    .panelTitle{font-weight:900; margin-bottom:8px;}
+    ul{margin:8px 0 0 18px; color:#0f172a;}
+    li{margin:6px 0; font-weight:700;}
+    .lineAddr{
+      font-family:var(--mono);
+      background:#fff;
+      border:1px dashed rgba(15,23,42,.20);
+      border-radius:12px;
+      padding:10px 12px;
+      margin-top:8px;
+      word-break:break-word;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:10px;
+      font-size:14px;
+    }
+    th,td{
+      border-top:1px solid var(--line);
+      padding:10px 10px;
       vertical-align:top;
     }
-    .table th{color:var(--muted); text-align:left; background: rgba(255,255,255,.04)}
-    .table tr:last-child td{border-bottom:none}
-    .muted{color:var(--muted)}
+    th{background:#f8fafc; text-align:left; font-weight:900;}
+    .pill{
+      display:inline-block;
+      padding:4px 10px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:12px;
+    }
+    .pillOk{background:#dcfce7; color:#166534; border:1px solid #86efac;}
+    .pillFail{background:#ffe4e6; color:#9f1239; border:1px solid #fecdd3;}
+
+    .footerNote{
+      margin-top:14px;
+      color:rgba(15,23,42,.60);
+      font-size:12px;
+      text-align:center;
+      font-weight:650;
+    }
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <div class="top">
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <div>
-          <h1>Đổi địa chỉ cũ → mới</h1>
-          <div class="sub">Dùng quangtam/vietnam-address-converter — sửa lỗi object hiển thị</div>
+    <div class="card">
+      <div class="title">
+        <div class="icon">⇄</div>
+        <div>Chuyển Đổi Địa Chỉ Cũ → Mới</div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="single">Đổi 1 địa chỉ</div>
+        <div class="tab" data-tab="batch">Đổi hàng loạt</div>
+      </div>
+
+      <!-- SINGLE -->
+      <div id="pane-single">
+        <label>Nhập địa chỉ cần chuyển đổi:</label>
+        <input id="singleInput" class="input" placeholder="Ví dụ: xa thanh binh, huyen cho gao, tinh tien giang" />
+
+        <button id="btnSingle" class="btn">
+          ⇄ Chuyển đổi địa chỉ
+        </button>
+
+        <div class="row">
+          <button class="miniBtn" id="btnSingleExample">Ví dụ</button>
+          <button class="miniBtn" id="btnCopyNewSingle">Copy địa chỉ mới (1 dòng)</button>
+          <button class="miniBtn" id="btnCopyOldSingle">Copy địa chỉ cũ (1 dòng)</button>
+          <button class="miniBtn" id="btnCopyJsonSingle">Copy JSON</button>
+        </div>
+
+        <div class="hint">
+          Tool tự thử nhiều kiểu nhận dạng: có dấu/không dấu, dấu phẩy, dấu “- / ; |”, viết tắt (tp, q, h, p, xa...), khoảng trắng linh tinh...
+        </div>
+
+        <div class="box" style="margin-top:16px;">
+          <div class="boxHead">2) Kết quả</div>
+
+          <div id="singleStatus" class="status warn">
+            <div class="badge warn">i</div>
+            <div>
+              <div class="msg">Đang tải dữ liệu…</div>
+              <div class="submsg">Chờ tool khởi tạo xong sẽ tự dùng được.</div>
+            </div>
+          </div>
+
+          <div id="singleResult" class="resultGrid" style="display:none;">
+            <div class="panel">
+              <div class="panelTitle">Địa chỉ gốc (cũ):</div>
+              <ul id="oldList"></ul>
+              <div class="lineAddr" id="oldLine"></div>
+            </div>
+
+            <div class="panel green">
+              <div class="panelTitle">Địa chỉ mới (sau chuyển đổi):</div>
+              <ul id="newList"></ul>
+              <div class="lineAddr" id="newLine"></div>
+            </div>
+
+            <div class="panel" style="background:#ecfeff;">
+              <div class="panelTitle">Thông tin chuyển đổi</div>
+              <div><b>Loại chuyển đổi:</b> <span id="mapType"></span></div>
+              <div style="margin-top:6px;"><b>Ghi chú:</b> <span id="note"></span></div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="pill">
-        <span class="muted">DB</span>
-        <span class="mono" id="dbPill"></span>
+
+      <!-- BATCH -->
+      <div id="pane-batch" style="display:none;">
+        <label>Nhập danh sách địa chỉ (mỗi dòng 1 địa chỉ):</label>
+        <textarea id="batchInput" placeholder="Ví dụ:
+xa thanh binh - huyen cho gao - tinh tien giang
+phuong 12, quan go vap, tp hcm
+p.15; q.10; tp.hcm"></textarea>
+
+        <button id="btnBatch" class="btn">
+          ⇄ Chuyển đổi hàng loạt
+        </button>
+
+        <div class="row">
+          <button class="miniBtn" id="btnBatchExample">Ví dụ</button>
+          <button class="miniBtn" id="btnCopyCsv">Copy CSV (old,new,success,message)</button>
+          <button class="miniBtn" id="btnCopyJsonBatch">Copy JSON</button>
+          <button class="miniBtn" id="btnCopyNewOnly">Copy danh sách địa chỉ mới (mỗi dòng 1)</button>
+        </div>
+
+        <div class="hint">
+          Batch sẽ trả bảng: địa chỉ cũ (1 dòng) → địa chỉ mới (1 dòng). Dòng nào fail sẽ có message.
+        </div>
+
+        <div class="box">
+          <div class="boxHead">Kết quả hàng loạt</div>
+          <div id="batchStatus" class="status warn">
+            <div class="badge warn">i</div>
+            <div>
+              <div class="msg">Sẵn sàng</div>
+              <div class="submsg">Dán danh sách rồi bấm chuyển đổi.</div>
+            </div>
+          </div>
+
+          <div id="batchWrap" style="display:none; padding:16px;">
+            <div style="font-weight:900; margin-bottom:8px;">
+              Tổng: <span id="batchTotal">0</span> • Thành công: <span id="batchOk">0</span> • Thất bại: <span id="batchFail">0</span>
+            </div>
+
+            <div style="overflow:auto; border:1px solid var(--line); border-radius:14px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:60px;">#</th>
+                    <th>Địa chỉ cũ (1 dòng)</th>
+                    <th>Địa chỉ mới (1 dòng)</th>
+                    <th style="width:120px;">Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody id="batchBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footerNote">
+        chạy offline (client-side) • không cần API key • nguồn dữ liệu: vietnam-address-database
       </div>
     </div>
-
-    <div class="card">
-      <div class="head">
-        <div class="tabs">
-          <div class="tab active" data-tab="single">Địa chỉ đơn lẻ</div>
-          <div class="tab" data-tab="batch">Chuyển đổi hàng loạt</div>
-          <div class="tab" data-tab="settings">Cấu hình</div>
-        </div>
-        <div class="muted" id="libState">Chưa khởi tạo dữ liệu…</div>
-      </div>
-
-      <div class="body">
-        <!-- SINGLE -->
-        <div class="pane" id="pane-single">
-          <div class="grid">
-            <div class="box">
-              <h2>1) Nhập địa chỉ cũ</h2>
-              <label>Địa chỉ (chuỗi)</label>
-              <textarea id="singleInput" placeholder="Ví dụ: Phường 12, Quận Gò Vấp, Thành phố Hồ Chí Minh"></textarea>
-
-              <div class="btns">
-                <button class="primary" id="btnSingleConvert">Chuyển đổi</button>
-                <button id="btnSingleExample">Điền ví dụ</button>
-                <button class="danger" id="btnSingleClear">Xóa</button>
-              </div>
-
-              <div class="hint">
-                Lưu ý: kết quả trả về có thể là object. Tool này sẽ tự format thành chuỗi.
-              </div>
-
-              <div class="status" id="singleStatus">Sẵn sàng.</div>
-            </div>
-
-            <div class="box">
-              <h2>2) Kết quả</h2>
-              <div class="status result" id="singleResult">Chưa có kết quả.</div>
-
-              <table class="table" id="singleTable" style="display:none">
-                <thead>
-                  <tr>
-                    <th>Trường</th>
-                    <th>Giá trị</th>
-                  </tr>
-                </thead>
-                <tbody id="singleTbody"></tbody>
-              </table>
-
-              <div class="btns">
-                <button id="btnCopyNew">Copy địa chỉ mới</button>
-                <button id="btnCopyJsonSingle">Copy JSON</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- BATCH -->
-        <div class="pane" id="pane-batch" style="display:none">
-          <div class="grid">
-            <div class="box">
-              <h2>1) Dán danh sách (mỗi dòng 1 địa chỉ)</h2>
-              <label>Danh sách địa chỉ cũ</label>
-              <textarea id="batchInput" placeholder="Mỗi dòng 1 địa chỉ...
-Ví dụ:
-Phường 12, Quận Gò Vấp, Thành phố Hồ Chí Minh
-Phường 15, Quận 10, TP.HCM"></textarea>
-
-              <div class="btns">
-                <button class="primary" id="btnBatchConvert">Chuyển đổi hàng loạt</button>
-                <button id="btnBatchExample">Dán ví dụ</button>
-                <button class="danger" id="btnBatchClear">Xóa</button>
-              </div>
-
-              <div class="hint">Batch chạy offline: convert từng dòng, xuất bảng + CSV.</div>
-              <div class="status" id="batchStatus">Sẵn sàng.</div>
-            </div>
-
-            <div class="box">
-              <h2>2) Kết quả</h2>
-
-              <div class="btns">
-                <button id="btnCopyCsv">Copy CSV (old,new,success,message)</button>
-                <button id="btnCopyJsonBatch">Copy JSON</button>
-              </div>
-
-              <div class="status result" id="batchResult">Chưa có kết quả.</div>
-
-              <table class="table" id="batchTable" style="display:none">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Địa chỉ cũ</th>
-                    <th>Địa chỉ mới</th>
-                    <th>Trạng thái</th>
-                  </tr>
-                </thead>
-                <tbody id="batchTbody"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- SETTINGS -->
-        <div class="pane" id="pane-settings" style="display:none">
-          <div class="grid">
-            <div class="box">
-              <h2>Cấu hình nguồn dữ liệu mapping</h2>
-
-              <label>URL address.json</label>
-              <input id="dbUrl" />
-
-              <div class="btns">
-                <button class="primary" id="btnInit">Khởi tạo / Nạp lại dữ liệu</button>
-                <button id="btnResetDb">Reset mặc định</button>
-              </div>
-
-              <div class="hint">
-                Mặc định dùng database từ unpkg: <span class="mono">vietnam-address-database@latest/address.json</span>
-              </div>
-
-              <div class="status" id="initStatus">Chưa khởi tạo.</div>
-            </div>
-
-            <div class="box">
-              <h2>Debug nhanh</h2>
-              <div class="status result">
-                Nếu vẫn không map ra, hãy bấm “Copy JSON” rồi dán JSON vào chat để mình chỉnh format/đọc field đúng schema bạn đang nhận.
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div><!-- body -->
-    </div><!-- card -->
-  </div><!-- wrap -->
+  </div>
 
 <script>
 (() => {
-  // ---------------- Tabs ----------------
-  const tabs = Array.from(document.querySelectorAll(".tab"));
-  const panes = {
-    single: document.getElementById("pane-single"),
-    batch: document.getElementById("pane-batch"),
-    settings: document.getElementById("pane-settings"),
-  };
-  tabs.forEach(t => t.addEventListener("click", () => {
-    tabs.forEach(x => x.classList.remove("active"));
-    t.classList.add("active");
-    const tab = t.getAttribute("data-tab");
-    Object.entries(panes).forEach(([k,el]) => el.style.display = (k === tab) ? "" : "none");
-  }));
-
-  // ---------------- Helpers ----------------
+  // ----------------- UI helpers -----------------
   const $ = (id) => document.getElementById(id);
-  const esc = (s) => (s ?? "").toString().replace(/[&<>"']/g, m => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[m]));
-  const setStatus = (el, msg, type="") => {
-    el.classList.remove("ok","err","warn");
-    if(type) el.classList.add(type);
-    el.textContent = msg;
-  };
-  const setHtml = (el, html, type="") => {
-    el.classList.remove("ok","err","warn");
-    if(type) el.classList.add(type);
-    el.innerHTML = html;
-  };
-  const toCsv = (rows) =>
-    rows.map(r => r.map(v => `"${String(v ?? "").replaceAll('"','""')}"`).join(",")).join("\n");
-  const parseLines = (text) => (text || "").split(/\r?\n/).map(x => x.trim()).filter(Boolean);
 
-  // ✅ FIX CHÍNH: format object -> string address
-  function bestStringFromObject(obj){
-    // ưu tiên các key hay gặp
-    const directKeys = [
-      "fullAddress","full_address","full_name","fullName","address","name","text","value"
+  function setStatus(el, type, title, desc){
+    el.className = "status " + type;
+    const badge = el.querySelector(".badge");
+    badge.className = "badge " + type;
+    badge.textContent = type === "ok" ? "✓" : type === "err" ? "!" : "i";
+    el.querySelector(".msg").textContent = title;
+    el.querySelector(".submsg").textContent = desc || "";
+  }
+
+  function normalizeSpaces(s){
+    return (s || "")
+      .replace(/\u00A0/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  // Bỏ dấu tiếng Việt
+  function removeAccents(str){
+    return (str || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d").replace(/Đ/g, "D");
+  }
+
+  // Chuẩn hoá phân tách: , - ; | / → dấu phẩy
+  function normalizeSeparators(s){
+    return (s || "")
+      .replace(/[|;/]+/g, ",")
+      .replace(/[-–—]+/g, ",")
+      .replace(/[\\\/]+/g, ",")
+      .replace(/\s*,\s*/g, ", ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  // Chuẩn hoá viết tắt (không dấu/có dấu đều cố gắng nhận)
+  function expandAbbr(s){
+    let x = " " + (s || "") + " ";
+    const reps = [
+      [/\btp\.?\b/gi, "thanh pho"],
+      [/\btp\b/gi, "thanh pho"],
+      [/\bt\.p\.?\b/gi, "thanh pho"],
+      [/\btinh\b/gi, "tinh"],
+      [/\bquan\.?\b/gi, "quan"],
+      [/\bq\.?\b/gi, "quan"],
+      [/\bhuyen\.?\b/gi, "huyen"],
+      [/\bh\.?\b/gi, "huyen"],
+      [/\bphuong\.?\b/gi, "phuong"],
+      [/\bp\.?\b/gi, "phuong"],
+      [/\bxa\.?\b/gi, "xa"],
+      [/\btx\.?\b/gi, "thi xa"],
+      [/\btt\.?\b/gi, "thi tran"],
     ];
-    for(const k of directKeys){
+    reps.forEach(([re, to]) => x = x.replace(re, " " + to + " "));
+    return normalizeSpaces(x);
+  }
+
+  // Title Case nhẹ (để nhìn đẹp hơn)
+  function smartCapitalize(s){
+    return (s || "")
+      .split(" ")
+      .map(w => w ? (w[0].toUpperCase() + w.slice(1)) : w)
+      .join(" ");
+  }
+
+  // ----------------- Address formatting (không còn [object Object]) -----------------
+  function bestStringFromObject(obj){
+    const keys = ["fullAddress","full_address","full_name","fullName","address","name","text","value"];
+    for(const k of keys){
       if(obj && obj[k] != null && String(obj[k]).trim() !== "") return String(obj[k]).trim();
     }
     return "";
@@ -363,28 +458,24 @@ Phường 15, Quận 10, TP.HCM"></textarea>
 
   function pickAreaName(area){
     if(!area || typeof area !== "object") return "";
-    const type = bestStringFromObject({fullAddress: area.type, name: area.type});
-    const name = bestStringFromObject({fullAddress: area.name, name: area.name, full_name: area.full_name});
-    if(type && name) return `${type} ${name}`.trim();
-    return (name || type || "").trim();
+    const t = (area.type || "").toString().trim();
+    const n = (area.name || area.full_name || "").toString().trim();
+    if(t && n) return (t + " " + n).trim();
+    return (n || t || "").trim();
   }
 
   function formatAddress(val){
     if(val == null) return "";
-    if(typeof val === "string") return val.trim();
+    if(typeof val === "string") return normalizeSpaces(val);
 
     if(typeof val === "object"){
-      // 1) nếu object có sẵn fullAddress/full_name/address -> lấy luôn
       const direct = bestStringFromObject(val);
-      if(direct) return direct;
+      if(direct) return normalizeSpaces(direct);
 
-      // 2) thử dựng từ các field hành chính hay gặp
       const parts = [];
-
-      const street = bestStringFromObject({street: val.street, streetAddress: val.streetAddress, address: val.streetAddress});
+      const street = (val.street || val.streetAddress || "").toString().trim();
       if(street) parts.push(street);
 
-      // ward/district/province có thể nằm ở nhiều tên khác nhau
       const ward = val.ward || val.newWard || val.wardInfo || val.new_ward;
       const district = val.district || val.districtInfo || val.oldDistrict || val.old_district;
       const province = val.province || val.provinceInfo || val.newProvince || val.new_province;
@@ -397,294 +488,272 @@ Phường 15, Quận 10, TP.HCM"></textarea>
       if(d) parts.push(d);
       if(p) parts.push(p);
 
-      if(parts.length) return parts.join(", ");
+      if(parts.length) return normalizeSpaces(parts.join(", "));
 
-      // 3) fallback: stringify gọn
       try { return JSON.stringify(val); } catch { return String(val); }
     }
-
-    return String(val).trim();
+    return normalizeSpaces(String(val));
   }
 
-  // ---------------- Converter Init ----------------
+  function breakdownFromObject(obj){
+    // trả về mảng dòng bullet: ["Phường/Xã: ...", ...]
+    const out = [];
+    if(!obj || typeof obj !== "object") return out;
+
+    const street = (obj.street || obj.streetAddress || "").toString().trim();
+    const ward = obj.ward || obj.newWard || obj.wardInfo || obj.new_ward;
+    const district = obj.district || obj.districtInfo || obj.oldDistrict || obj.old_district;
+    const province = obj.province || obj.provinceInfo || obj.newProvince || obj.new_province;
+
+    if(ward) out.push("Phường/Xã: " + pickAreaName(ward));
+    if(district) out.push("Quận/Huyện: " + pickAreaName(district));
+    if(province) out.push("Tỉnh/TP: " + pickAreaName(province));
+    out.push("Đường/Số nhà: " + (street ? street : "Không có"));
+
+    return out;
+  }
+
+  // ----------------- Converter -----------------
   let converter = null;
-  let isReady = false;
+  let ready = false;
 
-  const DB_URL_DEFAULT = "https://unpkg.com/vietnam-address-database@latest/address.json";
-  const KEY_DB_URL = "baotg10_vac_db_url";
-
-  const dbUrlInput = $("dbUrl");
-  const dbPill = $("dbPill");
-  const libState = $("libState");
-  const initStatus = $("initStatus");
-
-  function getDbUrl(){ return localStorage.getItem(KEY_DB_URL) || DB_URL_DEFAULT; }
-  function setDbUrl(v){ localStorage.setItem(KEY_DB_URL, v); }
-
-  function pillText(url){
-    const u = (url || "").replace("https://","").replace("http://","");
-    return u.length > 44 ? (u.slice(0,44) + "…") : u;
-  }
-
-  async function initConverter(){
-    const dbUrl = (dbUrlInput.value || "").trim();
-    if(!dbUrl){
-      setStatus(initStatus, "URL dữ liệu trống.", "err");
-      return;
-    }
-    if(!window.VietnamAddressConverter || !window.VietnamAddressConverter.VietnamAddressConverter){
-      setStatus(initStatus, "Không load được thư viện vietnam-address-converter (CDN).", "err");
-      libState.textContent = "Lỗi thư viện.";
+  async function init(){
+    if(!window.VietnamAddressConverter?.VietnamAddressConverter){
+      setStatus($("singleStatus"), "err", "Không load được thư viện", "Kiểm tra mạng/CDN unpkg.");
       return;
     }
 
-    setStatus(initStatus, "Đang tải dữ liệu mapping…", "warn");
-    libState.textContent = "Đang khởi tạo…";
+    setStatus($("singleStatus"), "warn", "Đang tải dữ liệu…", "Đợi 3–10s tuỳ mạng.");
     try{
       converter = new window.VietnamAddressConverter.VietnamAddressConverter();
-      await converter.initializeFromUrl(dbUrl);
-      isReady = true;
-      setStatus(initStatus, "Khởi tạo xong ✅", "ok");
-      libState.textContent = "Sẵn sàng ✅";
+      await converter.initializeFromUrl("https://unpkg.com/vietnam-address-database@latest/address.json");
+      ready = true;
+
+      setStatus($("singleStatus"), "ok", "Sẵn sàng!", "Nhập địa chỉ rồi bấm chuyển đổi.");
+      setStatus($("batchStatus"), "ok", "Sẵn sàng!", "Dán danh sách rồi bấm chuyển đổi.");
     }catch(e){
-      isReady = false;
-      setStatus(initStatus, "Lỗi khởi tạo: " + (e?.message || e), "err");
-      libState.textContent = "Chưa sẵn sàng ❌";
+      ready = false;
+      setStatus($("singleStatus"), "err", "Lỗi tải dữ liệu", e?.message || String(e));
     }
   }
 
-  // load settings
-  dbUrlInput.value = getDbUrl();
-  dbPill.textContent = pillText(dbUrlInput.value);
+  // Thử nhiều biến thể để “bắt” tốt nhất
+  function buildCandidates(input){
+    const raw = normalizeSpaces(input);
+    const sep = normalizeSeparators(raw);
 
-  $("btnResetDb").addEventListener("click", () => {
-    dbUrlInput.value = DB_URL_DEFAULT;
-    setDbUrl(DB_URL_DEFAULT);
-    dbPill.textContent = pillText(DB_URL_DEFAULT);
-    setStatus(initStatus, "Đã reset. Bấm Khởi tạo để nạp lại.", "warn");
-  });
+    const lower = sep.toLowerCase();
+    const exp = expandAbbr(lower);            // vẫn không dấu/có dấu nhưng chuẩn chữ
+    const expSep = normalizeSeparators(exp);
 
-  $("btnInit").addEventListener("click", async () => {
-    const v = (dbUrlInput.value || "").trim();
-    setDbUrl(v);
-    dbPill.textContent = pillText(v);
-    await initConverter();
-  });
+    const noAcc = removeAccents(expSep);      // bản không dấu
+    const capNoAcc = smartCapitalize(noAcc);  // để đẹp (không làm tăng đúng/sai nhiều)
 
-  // auto init
-  initConverter();
+    // Có nhiều trường hợp người dùng viết: "xa A huyen B tinh C" không có dấu phẩy
+    const addComma = expSep
+      .replace(/\b(xa|phuong|thi tran|thi xa)\b/gi, (m)=>m)
+      .replace(/\b(huyen|quan)\b/gi, (m)=>", " + m)
+      .replace(/\b(tinh|thanh pho)\b/gi, (m)=>", " + m);
+    const addComma2 = normalizeSeparators(addComma);
 
-  // ---------------- SINGLE ----------------
-  const singleInput = $("singleInput");
-  const singleStatus = $("singleStatus");
-  const singleResult = $("singleResult");
-  const singleTable = $("singleTable");
-  const singleTbody = $("singleTbody");
+    // Danh sách unique, giữ thứ tự
+    const list = [raw, sep, expSep, addComma2, noAcc, capNoAcc]
+      .map(x => normalizeSpaces(x))
+      .filter(Boolean);
+
+    return [...new Set(list)];
+  }
+
+  function tryConvertBest(input){
+    const cands = buildCandidates(input);
+
+    let bestFail = null;
+    for(const s of cands){
+      try{
+        const r = converter.convertAddress(s);
+        if(r && r.success) return { ok:true, used:s, res:r, tried:cands };
+        bestFail = bestFail || r;
+      }catch(e){
+        // ignore, try next
+      }
+    }
+    return { ok:false, used:cands[0] || "", res: bestFail || { success:false, message:"Không chuyển đổi được" }, tried:cands };
+  }
+
+  // ----------------- SINGLE actions -----------------
   let lastSingle = null;
 
-  function renderSingle(res){
-    lastSingle = res;
+  function renderSingle(payload){
+    const { ok, used, res, tried } = payload;
+    lastSingle = payload;
 
-    if(!res){
-      setHtml(singleResult, "Chưa có kết quả.");
-      singleTable.style.display = "none";
+    if(!ok){
+      $("singleResult").style.display = "none";
+      setStatus($("singleStatus"), "err", "Không chuyển đổi được", (res?.message || "Không tìm thấy mapping phù hợp."));
       return;
     }
 
-    const oldText = formatAddress(res.originalAddress);
-    const newText = formatAddress(res.convertedAddress);
+    // show result box
+    $("singleResult").style.display = "grid";
+    setStatus($("singleStatus"), "ok", "Chuyển đổi thành công!", `Đã nhận dạng theo: "${used}"`);
+
+    const oldObj = res.originalAddress;
+    const newObj = res.convertedAddress;
+
+    // Bullets
+    const oldLines = breakdownFromObject(oldObj);
+    const newLines = breakdownFromObject(newObj);
+
+    $("oldList").innerHTML = oldLines.map(x => `<li>${x}</li>`).join("");
+    $("newList").innerHTML = newLines.map(x => `<li>${x}</li>`).join("");
+
+    // One-line addresses (đúng ý bạn)
+    const oldLine = formatAddress(oldObj);
+    const newLine = formatAddress(newObj);
+
+    $("oldLine").textContent = oldLine || "(trống)";
+    $("newLine").textContent = newLine || "(trống)";
+
     const mappingType = res.mappingInfo?.mappingType || res.mappingType || "";
-
-    if(!res.success){
-      setHtml(singleResult,
-        `<div class="line"><span class="k">Lỗi:</span> <span class="v">${esc(res.message || "Không rõ lỗi")}</span></div>`,
-        "err"
-      );
-      singleTbody.innerHTML = `
-        <tr><td>success</td><td>false</td></tr>
-        <tr><td>message</td><td>${esc(res.message || "")}</td></tr>
-      `;
-      singleTable.style.display = "";
-      return;
-    }
-
-    setHtml(singleResult, `
-      <div class="line"><span class="k">Địa chỉ cũ:</span><br><span class="v">${esc(oldText || "(không có)")}</span></div>
-      <div class="line"><span class="k">Địa chỉ mới:</span><br><span class="v">${esc(newText || "(không có)")}</span></div>
-      <div class="line"><span class="k">Mapping type:</span> <span class="mono">${esc(mappingType || "(không có)")}</span></div>
-    `, "ok");
-
-    singleTbody.innerHTML = `
-      <tr><td>success</td><td>true</td></tr>
-      <tr><td>originalAddress</td><td>${esc(oldText)}</td></tr>
-      <tr><td>convertedAddress</td><td><b>${esc(newText)}</b></td></tr>
-      <tr><td>mappingType</td><td>${esc(mappingType)}</td></tr>
-    `;
-    singleTable.style.display = "";
+    $("mapType").textContent = mappingType || "—";
+    $("note").textContent = res.message || "Chuyển đổi thành công";
   }
 
-  $("btnSingleConvert").addEventListener("click", () => {
-    if(!isReady || !converter){
-      setStatus(singleStatus, "Chưa khởi tạo dữ liệu. Vào tab Cấu hình bấm Khởi tạo.", "err");
-      return;
-    }
-    const text = (singleInput.value || "").trim();
-    if(!text){
-      setStatus(singleStatus, "Bạn chưa nhập địa chỉ.", "warn");
-      return;
-    }
-    try{
-      setStatus(singleStatus, "Đang chuyển đổi…", "warn");
-      const res = converter.convertAddress(text);
-      renderSingle(res);
-      setStatus(singleStatus, res?.success ? "Xong ✅" : "Không chuyển đổi được ❌", res?.success ? "ok" : "err");
-    }catch(e){
-      setStatus(singleStatus, "Lỗi: " + (e?.message || e), "err");
-    }
+  $("btnSingle").addEventListener("click", () => {
+    const input = $("singleInput").value || "";
+    if(!ready) return setStatus($("singleStatus"), "warn", "Chưa sẵn sàng", "Đang tải dữ liệu...");
+    if(!normalizeSpaces(input)) return setStatus($("singleStatus"), "warn", "Bạn chưa nhập địa chỉ", "Hãy nhập rồi thử lại.");
+
+    renderSingle(tryConvertBest(input));
   });
 
   $("btnSingleExample").addEventListener("click", () => {
-    singleInput.value = "Phường 12, Quận Gò Vấp, Thành phố Hồ Chí Minh";
-    setStatus(singleStatus, "Đã điền ví dụ. Bấm Chuyển đổi.", "warn");
+    $("singleInput").value = "xã thanh bình,huyện chợ gạo,tỉnh tiền giang";
   });
 
-  $("btnSingleClear").addEventListener("click", () => {
-    singleInput.value = "";
-    lastSingle = null;
-    setStatus(singleStatus, "Đã xóa.", "ok");
-    setHtml(singleResult, "Chưa có kết quả.");
-    singleTable.style.display = "none";
+  $("btnCopyNewSingle").addEventListener("click", async () => {
+    const txt = lastSingle?.ok ? formatAddress(lastSingle.res.convertedAddress) : "";
+    if(!txt) return;
+    await navigator.clipboard.writeText(txt);
+    setStatus($("singleStatus"), "ok", "Đã copy địa chỉ mới (1 dòng)", txt);
   });
 
-  $("btnCopyNew").addEventListener("click", async () => {
-    const newAddr = formatAddress(lastSingle?.convertedAddress);
-    if(!newAddr){
-      setStatus(singleStatus, "Chưa có địa chỉ mới để copy.", "warn");
-      return;
-    }
-    await navigator.clipboard.writeText(newAddr);
-    setStatus(singleStatus, "Đã copy địa chỉ mới.", "ok");
+  $("btnCopyOldSingle").addEventListener("click", async () => {
+    const txt = lastSingle?.ok ? formatAddress(lastSingle.res.originalAddress) : "";
+    if(!txt) return;
+    await navigator.clipboard.writeText(txt);
+    setStatus($("singleStatus"), "ok", "Đã copy địa chỉ cũ (1 dòng)", txt);
   });
 
   $("btnCopyJsonSingle").addEventListener("click", async () => {
-    if(!lastSingle){
-      setStatus(singleStatus, "Chưa có JSON để copy.", "warn");
-      return;
-    }
-    await navigator.clipboard.writeText(JSON.stringify(lastSingle, null, 2));
-    setStatus(singleStatus, "Đã copy JSON.", "ok");
+    if(!lastSingle) return;
+    await navigator.clipboard.writeText(JSON.stringify(lastSingle.res, null, 2));
+    setStatus($("singleStatus"), "ok", "Đã copy JSON", "Dán JSON để debug nếu cần.");
   });
 
-  // ---------------- BATCH ----------------
-  const batchInput = $("batchInput");
-  const batchStatus = $("batchStatus");
-  const batchResult = $("batchResult");
-  const batchTable = $("batchTable");
-  const batchTbody = $("batchTbody");
+  // ----------------- BATCH actions -----------------
   let lastBatch = null;
 
-  $("btnBatchConvert").addEventListener("click", () => {
-    if(!isReady || !converter){
-      setStatus(batchStatus, "Chưa khởi tạo dữ liệu. Vào tab Cấu hình bấm Khởi tạo.", "err");
-      return;
-    }
-    const lines = parseLines(batchInput.value);
-    if(!lines.length){
-      setStatus(batchStatus, "Danh sách trống.", "warn");
-      return;
-    }
+  $("btnBatchExample").addEventListener("click", () => {
+    $("batchInput").value =
+`xa thanh binh - huyen cho gao - tinh tien giang
+phuong 12, quan go vap, tp hcm
+p.15; q.10; tp.hcm
+xã phú mỹ huyện tân phước tỉnh tiền giang`;
+  });
 
-    setStatus(batchStatus, `Đang chuyển đổi ${lines.length} dòng…`, "warn");
-    const results = [];
+  $("btnBatch").addEventListener("click", () => {
+    if(!ready) return setStatus($("batchStatus"), "warn", "Chưa sẵn sàng", "Đang tải dữ liệu...");
+    const lines = ($("batchInput").value || "").split(/\r?\n/).map(x => normalizeSpaces(x)).filter(Boolean);
+    if(!lines.length) return setStatus($("batchStatus"), "warn", "Danh sách trống", "Mỗi dòng 1 địa chỉ.");
+
+    setStatus($("batchStatus"), "warn", "Đang xử lý…", `Đang đổi ${lines.length} dòng`);
+    const rows = [];
+    let okCount = 0;
 
     for(let i=0;i<lines.length;i++){
-      const oldAddr = lines[i];
-      try{
-        const r = converter.convertAddress(oldAddr);
-        results.push({
-          index: i+1,
-          old: oldAddr,
-          new: formatAddress(r?.convertedAddress),
-          success: !!r?.success,
-          message: r?.success ? "" : (r?.message || "Không chuyển đổi được"),
-          raw: r
-        });
-      }catch(e){
-        results.push({
-          index: i+1,
-          old: oldAddr,
-          new: "",
-          success: false,
-          message: e?.message || String(e),
-          raw: null
-        });
-      }
+      const oldRaw = lines[i];
+      const r = tryConvertBest(oldRaw);
+      if(r.ok) okCount++;
+
+      rows.push({
+        index: i+1,
+        oldLine: r.ok ? formatAddress(r.res.originalAddress) : oldRaw,
+        newLine: r.ok ? formatAddress(r.res.convertedAddress) : "",
+        success: r.ok,
+        message: r.ok ? (r.res.message || "") : (r.res?.message || "Không chuyển đổi được"),
+        used: r.used
+      });
     }
 
-    lastBatch = results;
+    lastBatch = rows;
 
-    const okCount = results.filter(x => x.success).length;
-    const failCount = results.length - okCount;
+    const failCount = rows.length - okCount;
+    $("batchWrap").style.display = "block";
+    $("batchTotal").textContent = rows.length;
+    $("batchOk").textContent = okCount;
+    $("batchFail").textContent = failCount;
 
-    setHtml(batchResult, `
-      <div class="line"><span class="k">Tổng:</span> <span class="v">${results.length}</span></div>
-      <div class="line"><span class="k">Thành công:</span> <span class="v">${okCount}</span></div>
-      <div class="line"><span class="k">Thất bại:</span> <span class="v">${failCount}</span></div>
-    `, okCount ? "ok" : "warn");
-
-    batchTbody.innerHTML = results.map(r => `
+    $("batchBody").innerHTML = rows.map(r => `
       <tr>
-        <td class="mono">${r.index}</td>
-        <td>${esc(r.old)}</td>
-        <td>${r.success ? "<b>"+esc(r.new)+"</b>" : "<span class='muted'>(trống)</span>"}</td>
-        <td class="mono">${r.success ? "OK" : "FAIL: " + esc(r.message)}</td>
+        <td>${r.index}</td>
+        <td>${escapeHtml(r.oldLine || r.oldRaw || "")}</td>
+        <td>${escapeHtml(r.newLine || "")}</td>
+        <td>
+          <span class="pill ${r.success ? "pillOk" : "pillFail"}">
+            ${r.success ? "OK" : "FAIL"}
+          </span>
+        </td>
       </tr>
     `).join("");
 
-    batchTable.style.display = "";
-    setStatus(batchStatus, "Xong ✅", "ok");
-  });
-
-  $("btnBatchExample").addEventListener("click", () => {
-    batchInput.value =
-`Phường 12, Quận Gò Vấp, Thành phố Hồ Chí Minh
-Phường 15, Quận 10, TP.HCM
-Phường An Lạc, Quận Bình Tân, TP.HCM`;
-    setStatus(batchStatus, "Đã dán ví dụ. Bấm Chuyển đổi hàng loạt.", "warn");
-  });
-
-  $("btnBatchClear").addEventListener("click", () => {
-    batchInput.value = "";
-    lastBatch = null;
-    batchTable.style.display = "none";
-    setHtml(batchResult, "Chưa có kết quả.");
-    setStatus(batchStatus, "Đã xóa.", "ok");
+    setStatus($("batchStatus"), "ok", "Xong!", `Thành công ${okCount}/${rows.length}`);
   });
 
   $("btnCopyJsonBatch").addEventListener("click", async () => {
-    if(!lastBatch){
-      setStatus(batchStatus, "Chưa có JSON để copy.", "warn");
-      return;
-    }
-    // compact
-    const compact = lastBatch.map(r => ({
-      index: r.index, old: r.old, new: r.new, success: r.success, message: r.message
-    }));
-    await navigator.clipboard.writeText(JSON.stringify(compact, null, 2));
-    setStatus(batchStatus, "Đã copy JSON batch.", "ok");
+    if(!lastBatch) return;
+    await navigator.clipboard.writeText(JSON.stringify(lastBatch, null, 2));
+    setStatus($("batchStatus"), "ok", "Đã copy JSON batch", "Dán JSON để debug nếu cần.");
+  });
+
+  $("btnCopyNewOnly").addEventListener("click", async () => {
+    if(!lastBatch) return;
+    const txt = lastBatch.map(r => r.newLine || "").join("\n");
+    await navigator.clipboard.writeText(txt);
+    setStatus($("batchStatus"), "ok", "Đã copy danh sách địa chỉ mới", "Mỗi dòng 1 địa chỉ.");
   });
 
   $("btnCopyCsv").addEventListener("click", async () => {
-    if(!lastBatch){
-      setStatus(batchStatus, "Chưa có dữ liệu để copy CSV.", "warn");
-      return;
-    }
-    const rows = [["old","new","success","message"]];
-    lastBatch.forEach(r => rows.push([r.old, r.new, r.success, r.message]));
-    await navigator.clipboard.writeText(toCsv(rows));
-    setStatus(batchStatus, "Đã copy CSV.", "ok");
+    if(!lastBatch) return;
+    const header = ["old","new","success","message","used"];
+    const rows = [header].concat(lastBatch.map(r => [
+      r.oldLine, r.newLine, r.success, r.message, r.used
+    ]));
+    const csv = rows.map(arr => arr.map(v => `"${String(v ?? "").replaceAll('"','""')}"`).join(",")).join("\n");
+    await navigator.clipboard.writeText(csv);
+    setStatus($("batchStatus"), "ok", "Đã copy CSV", "Bạn dán vào Excel là ra cột.");
   });
 
+  function escapeHtml(s){
+    return (s ?? "").toString().replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[m]));
+  }
+
+  // ----------------- Tabs -----------------
+  document.querySelectorAll(".tab").forEach(t => {
+    t.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+      t.classList.add("active");
+
+      const tab = t.getAttribute("data-tab");
+      $("pane-single").style.display = (tab === "single") ? "" : "none";
+      $("pane-batch").style.display  = (tab === "batch")  ? "" : "none";
+    });
+  });
+
+  // init
+  init();
 })();
 </script>
 </body>
