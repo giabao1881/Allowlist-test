@@ -1,254 +1,628 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Công Cụ Chuyển Đổi Địa Chỉ - diachimoivn</title>
-    <!-- CSS của chúng ta -->
-    <link rel="stylesheet" href="style.css">
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Font Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📍</text></svg>">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>baotg10 | Đổi địa chỉ cũ → mới (Vietnam Address Converter)</title>
+
+  <!-- Library from repo (Browser build) -->
+  <script src="https://unpkg.com/vietnam-address-converter@latest/dist/index.browser.js"></script>
+  <!-- Data mapping (repo recommends loading from vietnam-address-database CDN) -->
+  <!-- We'll fetch this in JS via initializeFromUrl(...) -->
+
+  <style>
+    :root{
+      color-scheme: dark;
+      --bg0:#070b14; --bg1:#0b1220;
+      --card: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.12);
+      --text:#e5e7eb; --muted:#94a3b8;
+      --p1:#3b82f6; --p2:#8b5cf6; --p3:#ec4899;
+      --ok:#22c55e; --err:#ef4444; --warn:#f59e0b;
+      --shadow: 0 18px 60px rgba(0,0,0,.55);
+      --r:18px; --r2:12px;
+      --w: 980px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:var(--sans); color:var(--text);
+      background:
+        radial-gradient(900px 500px at 15% 10%, rgba(59,130,246,.20), transparent 60%),
+        radial-gradient(900px 500px at 85% 20%, rgba(139,92,246,.18), transparent 60%),
+        radial-gradient(900px 500px at 50% 95%, rgba(236,72,153,.10), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      min-height:100vh; display:flex; justify-content:center; padding:26px;
+    }
+    .wrap{width:min(var(--w),100%);}
+    .top{display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:14px;}
+    .brand{display:flex; align-items:center; gap:12px;}
+    .logo{
+      width:44px; height:44px; border-radius:14px;
+      background: linear-gradient(135deg, var(--p1), var(--p2), var(--p3));
+      box-shadow: 0 18px 40px rgba(0,0,0,.35);
+      position:relative;
+    }
+    .logo:after{
+      content:""; position:absolute; inset:2px; border-radius:12px;
+      background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.38), transparent 45%),
+                  radial-gradient(circle at 70% 65%, rgba(255,255,255,.20), transparent 45%),
+                  rgba(0,0,0,.10);
+      mix-blend-mode: screen;
+    }
+    h1{font-size:18px; margin:0; letter-spacing:.2px}
+    .sub{color:var(--muted); font-size:13px; margin-top:3px}
+    .pill{
+      display:flex; gap:8px; align-items:center;
+      padding:10px 12px; border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      box-shadow: var(--shadow);
+      font-size:12px;
+    }
+    .pill .mono{font-family:var(--mono)}
+    .card{
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, var(--card), rgba(255,255,255,.03));
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .head{
+      padding:14px 16px;
+      background: linear-gradient(90deg, rgba(59,130,246,.12), rgba(139,92,246,.10), rgba(236,72,153,.10));
+      border-bottom:1px solid var(--border);
+      display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .tabs{display:flex; gap:8px; flex-wrap:wrap;}
+    .tab{
+      cursor:pointer; user-select:none;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      padding:8px 10px; border-radius:999px;
+      font-size:13px;
+    }
+    .tab.active{border-color: rgba(59,130,246,.45); background: rgba(59,130,246,.14);}
+    .body{padding:16px;}
+    .grid{display:grid; grid-template-columns: 1.1fr 1fr; gap:14px;}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr;} }
+    .box{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      border-radius: var(--r2);
+      padding:12px;
+    }
+    .box h2{margin:0 0 10px 0; font-size:14px; letter-spacing:.2px;}
+    label{display:block; font-size:12px; color:var(--muted); margin:0 0 6px}
+    textarea, input{
+      width:100%;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      color: var(--text);
+      border-radius: 12px;
+      padding:10px 10px;
+      outline:none;
+      font-size:14px;
+    }
+    textarea{min-height:130px; resize:vertical; line-height:1.4}
+    input:focus, textarea:focus{
+      border-color: rgba(59,130,246,.55);
+      box-shadow: 0 0 0 3px rgba(59,130,246,.18);
+    }
+    .btns{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+    button{
+      cursor:pointer;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 12px;
+      font-weight:700;
+      letter-spacing:.2px;
+    }
+    button.primary{
+      border:none;
+      background: linear-gradient(135deg, var(--p1), var(--p2));
+      box-shadow: 0 14px 30px rgba(59,130,246,.18);
+    }
+    button.danger{border-color: rgba(239,68,68,.45); background: rgba(239,68,68,.10)}
+    button:disabled{opacity:.55; cursor:not-allowed}
+    .hint{font-size:12px; color:var(--muted); margin-top:8px; line-height:1.5}
+    .status{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius: 12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      font-size:13px;
+      line-height:1.45;
+      white-space:pre-wrap;
+      word-break:break-word;
+      font-family: var(--mono);
+    }
+    .ok{border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.10)}
+    .err{border-color: rgba(239,68,68,.38); background: rgba(239,68,68,.10)}
+    .warn{border-color: rgba(245,158,11,.38); background: rgba(245,158,11,.10)}
+    .result{font-family:var(--sans); white-space:normal}
+    .line{margin:8px 0}
+    .k{color:var(--muted)}
+    .v{font-weight:800}
+    .mono{font-family:var(--mono)}
+    .table{
+      width:100%; border-collapse:separate; border-spacing:0;
+      overflow:hidden; border-radius: 12px;
+      border:1px solid rgba(255,255,255,.10);
+      margin-top:10px;
+    }
+    .table th,.table td{
+      padding:10px 10px; font-size:13px; border-bottom:1px solid rgba(255,255,255,.08);
+      vertical-align:top;
+    }
+    .table th{color:var(--muted); text-align:left; background: rgba(255,255,255,.04)}
+    .table tr:last-child td{border-bottom:none}
+    .muted{color:var(--muted)}
+  </style>
 </head>
+
 <body>
-    <div class="app-container">
-        <!-- Header Section -->
-        <header class="app-header">
-            <div class="header-content">
-                <div class="logo">
-                    <i class="fas fa-map-marked-alt"></i>
-                </div>
-                <h1>CÔNG CỤ CHUYỂN ĐỔI ĐỊA CHỈ VIỆT NAM</h1>
-                <p class="subtitle">Chuyển đổi hàng loạt từ cấu trúc cũ (Tỉnh → Huyện → Xã) sang cấu trúc mới (Tỉnh → Xã)</p>
-                <div class="badges">
-                    <span class="badge"><i class="fas fa-bolt"></i> Xử lý nhanh</span>
-                    <span class="badge"><i class="fas fa-check-circle"></i> Chính xác</span>
-                    <span class="badge"><i class="fas fa-download"></i> Xuất file</span>
-                </div>
-            </div>
-        </header>
-
-        <!-- Loading Indicator -->
-        <div id="loadingSection" class="loading-section">
-            <div class="spinner"></div>
-            <p class="mt-3">Đang tải dữ liệu địa chỉ Việt Nam...</p>
-            <div class="progress mt-3" style="width: 300px;">
-                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 45%"></div>
-            </div>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Đổi địa chỉ cũ → mới</h1>
+          <div class="sub">Chạy theo thư viện quangtam/vietnam-address-converter (không cần API key)</div>
         </div>
-
-        <!-- Data Status (sẽ hiển thị sau khi tải xong) -->
-        <div id="dataStatus" class="data-status" style="display: none;">
-            <!-- Sẽ được cập nhật bằng JavaScript -->
-        </div>
-
-        <!-- Main Content -->
-        <main class="main-content" style="display: none;">
-            <div class="container-fluid">
-                <div class="row g-4">
-                    <!-- Left Column: Input -->
-                    <div class="col-lg-6">
-                        <div class="card shadow">
-                            <div class="card-header gradient-bg">
-                                <h3><i class="fas fa-edit me-2"></i> NHẬP ĐỊA CHỈ CẦN CHUYỂN ĐỔI</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="mb-4">
-                                    <label for="inputAddresses" class="form-label fw-bold">
-                                        <i class="fas fa-list-alt me-1"></i> Danh sách địa chỉ (mỗi địa chỉ một dòng)
-                                    </label>
-                                    <textarea 
-                                        id="inputAddresses" 
-                                        class="form-control" 
-                                        rows="12"
-                                        placeholder="Dán danh sách địa chỉ của bạn vào đây...
-                                        
-Ví dụ:
-• Số 34 ấp Bình Long, xã Thanh Bình, huyện Chợ Gạo, tỉnh Tiền Giang
-• Phường Trúc Bạch, quận Ba Đình, thành phố Hà Nội
-• Thôn 5, xã Ea Khal, huyện Ea H'Leo, tỉnh Đắk Lắk
-• Số 123 đường Lê Lợi, phường Bến Nghé, quận 1, TP. Hồ Chí Minh"
-                                    ></textarea>
-                                    <div class="form-text mt-2">
-                                        <i class="fas fa-info-circle"></i> Hỗ trợ mọi định dạng: có dấu phẩy, gạch ngang, hoặc chỉ khoảng trắng
-                                    </div>
-                                </div>
-
-                                <!-- Statistics -->
-                                <div class="stats-grid mb-4">
-                                    <div class="stat-card">
-                                        <div class="stat-value" id="lineCount">0</div>
-                                        <div class="stat-label">DÒNG DỮ LIỆU</div>
-                                    </div>
-                                    <div class="stat-card">
-                                        <div class="stat-value" id="provinceCount">0</div>
-                                        <div class="stat-label">TỈNH/THÀNH</div>
-                                    </div>
-                                    <div class="stat-card">
-                                        <div class="stat-value" id="districtCount">0</div>
-                                        <div class="stat-label">QUẬN/HUYỆN</div>
-                                    </div>
-                                    <div class="stat-card">
-                                        <div class="stat-value" id="wardCount">0</div>
-                                        <div class="stat-label">PHƯỜNG/XÃ</div>
-                                    </div>
-                                </div>
-
-                                <!-- Example Addresses -->
-                                <div class="example-box">
-                                    <h6><i class="fas fa-lightbulb me-2"></i> ĐỊNH DẠNG ĐƯỢC HỖ TRỢ:</h6>
-                                    <div class="examples">
-                                        <code>tỉnh Tiền Giang, huyện Chợ Gạo, xã Thanh Bình</code>
-                                        <code>Hà Nội - Quận Ba Đình - Phường Trúc Bạch</code>
-                                        <code>Thành phố Hồ Chí Minh Quận 1 Phường Bến Nghé</code>
-                                    </div>
-                                </div>
-
-                                <!-- Action Buttons -->
-                                <div class="action-buttons mt-4">
-                                    <button id="btnConvert" class="btn btn-primary btn-lg" disabled>
-                                        <i class="fas fa-sync-alt me-2"></i> BẮT ĐẦU CHUYỂN ĐỔI
-                                    </button>
-                                    <button id="btnExample" class="btn btn-outline-primary">
-                                        <i class="fas fa-magic me-2"></i> DÙNG VÍ DỤ
-                                    </button>
-                                    <button id="btnReset" class="btn btn-outline-secondary">
-                                        <i class="fas fa-trash-alt me-2"></i> XÓA TẤT CẢ
-                                    </button>
-                                </div>
-
-                                <!-- Progress Bar -->
-                                <div id="progressContainer" class="mt-4" style="display: none;">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span id="progressText">Đang phân tích địa chỉ...</span>
-                                        <span id="progressPercent">0%</span>
-                                    </div>
-                                    <div class="progress" style="height: 10px;">
-                                        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
-                                             role="progressbar" style="width: 0%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Column: Results -->
-                    <div class="col-lg-6">
-                        <div class="card shadow">
-                            <div class="card-header gradient-bg">
-                                <h3><i class="fas fa-chart-bar me-2"></i> KẾT QUẢ CHUYỂN ĐỔI</h3>
-                            </div>
-                            <div class="card-body">
-                                <!-- Result Stats -->
-                                <div id="resultStats" class="result-stats" style="display: none;">
-                                    <div class="stats-header">
-                                        <h5 id="resultTitle">ĐANG XỬ LÝ</h5>
-                                        <div class="success-rate" id="successRate">0%</div>
-                                    </div>
-                                    <div class="stats-details">
-                                        <div class="stat-success">
-                                            <i class="fas fa-check-circle"></i>
-                                            <span id="successCount">0</span> Thành công
-                                        </div>
-                                        <div class="stat-warning">
-                                            <i class="fas fa-exclamation-triangle"></i>
-                                            <span id="warningCount">0</span> Cảnh báo
-                                        </div>
-                                        <div class="stat-error">
-                                            <i class="fas fa-times-circle"></i>
-                                            <span id="errorCount">0</span> Lỗi
-                                        </div>
-                                    </div>
-                                    <p class="mb-0" id="resultText">Chờ dữ liệu...</p>
-                                </div>
-
-                                <!-- Results Table -->
-                                <div class="table-container mt-4">
-                                    <table id="resultTable" class="table table-hover" style="width:100%; display: none;">
-                                        <thead>
-                                            <tr>
-                                                <th width="50">#</th>
-                                                <th>ĐỊA CHỈ GỐC</th>
-                                                <th>TỈNH/THÀNH</th>
-                                                <th>QUẬN/HUYỆN</th>
-                                                <th>PHƯỜNG/XÃ</th>
-                                                <th width="100">TRẠNG THÁI</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="resultBody">
-                                            <!-- Dữ liệu sẽ được thêm vào đây -->
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                <!-- Export Buttons -->
-                                <div id="exportSection" class="export-section mt-4" style="display: none;">
-                                    <h6 class="mb-3"><i class="fas fa-download me-2"></i> XUẤT KẾT QUẢ:</h6>
-                                    <div class="export-buttons">
-                                        <button id="btnExportCSV" class="btn btn-success">
-                                            <i class="fas fa-file-csv me-2"></i> TẢI CSV
-                                        </button>
-                                        <button id="btnExportExcel" class="btn btn-success" style="background: linear-gradient(to right, #217346, #1e663e);">
-                                            <i class="fas fa-file-excel me-2"></i> TẢI EXCEL
-                                        </button>
-                                        <button id="btnCopyTable" class="btn btn-primary">
-                                            <i class="fas fa-copy me-2"></i> SAO CHÉP
-                                        </button>
-                                        <button id="btnPrint" class="btn btn-outline-secondary">
-                                            <i class="fas fa-print me-2"></i> IN ẤN
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <!-- Footer -->
-        <footer class="app-footer">
-            <div class="container">
-                <div class="footer-content">
-                    <p class="mb-2">
-                        <strong>Công cụ chuyển đổi địa chỉ Việt Nam</strong> • Dữ liệu cập nhật 2025
-                    </p>
-                    <p class="mb-0">
-                        <small>
-                            <i class="fas fa-code"></i> Xử lý 100% trên trình duyệt • 
-                            <i class="fas fa-shield-alt"></i> Không lưu trữ dữ liệu •
-                            <span id="versionInfo">Đang tải...</span>
-                        </small>
-                    </p>
-                </div>
-            </div>
-        </footer>
+      </div>
+      <div class="pill">
+        <span class="muted">Database</span>
+        <span class="mono" id="dbUrlTxt">unpkg vietnam-address-database</span>
+      </div>
     </div>
 
-    <!-- JavaScript Libraries -->
-    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <div class="card">
+      <div class="head">
+        <div class="tabs">
+          <div class="tab active" data-tab="single">Địa chỉ đơn lẻ</div>
+          <div class="tab" data-tab="batch">Chuyển đổi hàng loạt</div>
+          <div class="tab" data-tab="settings">Cấu hình</div>
+        </div>
+        <div class="muted" id="libState">Chưa khởi tạo dữ liệu…</div>
+      </div>
 
-    <!-- Main Application Script -->
-    <script src="app.js"></script>
+      <div class="body">
+        <!-- SINGLE -->
+        <div class="pane" id="pane-single">
+          <div class="grid">
+            <div class="box">
+              <h2>1) Nhập địa chỉ cũ</h2>
+              <label>Địa chỉ (chuỗi)</label>
+              <textarea id="singleInput" placeholder="Ví dụ: Phường 12, Quận Gò Vấp, Thành phố Hồ Chí Minh"></textarea>
 
-    <!-- Initialize the app -->
-    <script>
-        // Khởi tạo ứng dụng sau khi trang tải xong
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Ứng dụng đã sẵn sàng!');
+              <div class="btns">
+                <button class="primary" id="btnSingleConvert">Chuyển đổi</button>
+                <button id="btnSingleExample">Điền ví dụ</button>
+                <button class="danger" id="btnSingleClear">Xóa</button>
+              </div>
+
+              <div class="hint">
+                Thư viện hỗ trợ convert từ string và trả kết quả gồm: success, originalAddress, convertedAddress, mappingInfo/message. :contentReference[oaicite:1]{index=1}
+              </div>
+
+              <div class="status" id="singleStatus">Sẵn sàng.</div>
+            </div>
+
+            <div class="box">
+              <h2>2) Kết quả</h2>
+              <div class="status result" id="singleResult">Chưa có kết quả.</div>
+
+              <table class="table" id="singleTable" style="display:none">
+                <thead>
+                  <tr>
+                    <th>Trường</th>
+                    <th>Giá trị</th>
+                  </tr>
+                </thead>
+                <tbody id="singleTbody"></tbody>
+              </table>
+
+              <div class="btns">
+                <button id="btnCopyNew">Copy địa chỉ mới</button>
+                <button id="btnCopyJsonSingle">Copy JSON</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BATCH -->
+        <div class="pane" id="pane-batch" style="display:none">
+          <div class="grid">
+            <div class="box">
+              <h2>1) Dán danh sách (mỗi dòng 1 địa chỉ)</h2>
+              <label>Danh sách địa chỉ cũ</label>
+              <textarea id="batchInput" placeholder="Mỗi dòng 1 địa chỉ...
+Ví dụ:
+Phường 12, Quận Gò Vấp, Thành phố Hồ Chí Minh
+Phường 15, Quận 10, TP.HCM"></textarea>
+
+              <div class="btns">
+                <button class="primary" id="btnBatchConvert">Chuyển đổi hàng loạt</button>
+                <button id="btnBatchExample">Dán ví dụ</button>
+                <button class="danger" id="btnBatchClear">Xóa</button>
+              </div>
+
+              <div class="hint">Batch chạy offline trong trình duyệt: tool sẽ convert từng dòng và tổng hợp bảng kết quả.</div>
+              <div class="status" id="batchStatus">Sẵn sàng.</div>
+            </div>
+
+            <div class="box">
+              <h2>2) Kết quả</h2>
+
+              <div class="btns">
+                <button id="btnCopyCsv">Copy CSV (old,new,success,message)</button>
+                <button id="btnCopyJsonBatch">Copy JSON</button>
+              </div>
+
+              <div class="status result" id="batchResult">Chưa có kết quả.</div>
+
+              <table class="table" id="batchTable" style="display:none">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Địa chỉ cũ</th>
+                    <th>Địa chỉ mới</th>
+                    <th>Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody id="batchTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div class="pane" id="pane-settings" style="display:none">
+          <div class="grid">
+            <div class="box">
+              <h2>Cấu hình nguồn dữ liệu mapping</h2>
+
+              <label>URL address.json (vietnam-address-database)</label>
+              <input id="dbUrl" />
+
+              <div class="btns">
+                <button class="primary" id="btnInit">Khởi tạo / Nạp lại dữ liệu</button>
+                <button id="btnResetDb">Reset về mặc định</button>
+              </div>
+
+              <div class="hint">
+                Theo README: browser dùng <span class="mono">initializeFromUrl('https://unpkg.com/vietnam-address-database@latest/address.json')</span>. :contentReference[oaicite:2]{index=2}
+              </div>
+
+              <div class="status" id="initStatus">Chưa khởi tạo.</div>
+            </div>
+
+            <div class="box">
+              <h2>Ghi chú</h2>
+              <div class="status result">
+                <div class="line"><span class="k">Không cần API key</span> — chạy hoàn toàn client-side.</div>
+                <div class="line"><span class="k">Nguồn dữ liệu</span> — lấy từ CDN của <span class="mono">vietnam-address-database</span> để đồng bộ bản mới. :contentReference[oaicite:3]{index=3}</div>
+                <div class="line"><span class="k">Lưu ý</span> — nếu bạn host lên GitHub Pages, vẫn chạy bình thường vì chỉ là HTML+JS.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- body -->
+    </div><!-- card -->
+  </div><!-- wrap -->
+
+<script>
+(() => {
+  // ----- Tabs -----
+  const tabs = Array.from(document.querySelectorAll(".tab"));
+  const panes = {
+    single: document.getElementById("pane-single"),
+    batch: document.getElementById("pane-batch"),
+    settings: document.getElementById("pane-settings"),
+  };
+  tabs.forEach(t => t.addEventListener("click", () => {
+    tabs.forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    const tab = t.getAttribute("data-tab");
+    Object.entries(panes).forEach(([k,el]) => el.style.display = (k === tab) ? "" : "none");
+  }));
+
+  // ----- Helpers -----
+  const $ = (id) => document.getElementById(id);
+  const setStatus = (el, msg, type="") => {
+    el.classList.remove("ok","err","warn");
+    if(type) el.classList.add(type);
+    el.textContent = msg;
+  };
+  const setHtml = (el, html, type="") => {
+    el.classList.remove("ok","err","warn");
+    if(type) el.classList.add(type);
+    el.innerHTML = html;
+  };
+  const esc = (s) => (s ?? "").toString().replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
+  const toCsv = (rows) => rows.map(r => r.map(v => `"${String(v ?? "").replaceAll('"','""')}"`).join(",")).join("\n");
+
+  // ----- Converter -----
+  let converter = null;
+  let isReady = false;
+
+  const DB_URL_DEFAULT = "https://unpkg.com/vietnam-address-database@latest/address.json";
+  const KEY_DB_URL = "baotg10_vac_db_url";
+
+  const dbUrlInput = $("dbUrl");
+  const dbUrlTxt = $("dbUrlTxt");
+  const libState = $("libState");
+  const initStatus = $("initStatus");
+
+  function getDbUrl(){
+    return localStorage.getItem(KEY_DB_URL) || DB_URL_DEFAULT;
+  }
+  function setDbUrl(v){
+    localStorage.setItem(KEY_DB_URL, v);
+  }
+
+  async function initConverter(){
+    const dbUrl = (dbUrlInput.value || "").trim();
+    if(!dbUrl){
+      setStatus(initStatus, "URL dữ liệu trống.", "err");
+      return;
+    }
+    if(!window.VietnamAddressConverter || !window.VietnamAddressConverter.VietnamAddressConverter){
+      setStatus(initStatus, "Không load được thư viện vietnam-address-converter (CDN).", "err");
+      libState.textContent = "Lỗi thư viện.";
+      return;
+    }
+
+    setStatus(initStatus, "Đang tải dữ liệu mapping…", "warn");
+    libState.textContent = "Đang khởi tạo…";
+    try{
+      converter = new window.VietnamAddressConverter.VietnamAddressConverter();
+      // Repo README: initializeFromUrl('https://unpkg.com/vietnam-address-database@latest/address.json')
+      await converter.initializeFromUrl(dbUrl);
+      isReady = true;
+      setStatus(initStatus, "Khởi tạo xong. Dữ liệu đã sẵn sàng.", "ok");
+      libState.textContent = "Sẵn sàng ✅";
+    }catch(e){
+      isReady = false;
+      setStatus(initStatus, "Lỗi khởi tạo: " + (e?.message || e), "err");
+      libState.textContent = "Chưa sẵn sàng ❌";
+    }
+  }
+
+  // Fill settings initial
+  dbUrlInput.value = getDbUrl();
+  dbUrlTxt.textContent = dbUrlInput.value.replace("https://","").slice(0,46) + "…";
+
+  $("btnResetDb").addEventListener("click", () => {
+    dbUrlInput.value = DB_URL_DEFAULT;
+    setDbUrl(DB_URL_DEFAULT);
+    dbUrlTxt.textContent = dbUrlInput.value.replace("https://","").slice(0,46) + "…";
+    setStatus(initStatus, "Đã reset URL dữ liệu. Bấm Khởi tạo.", "warn");
+  });
+
+  $("btnInit").addEventListener("click", async () => {
+    const v = (dbUrlInput.value || "").trim();
+    setDbUrl(v);
+    dbUrlTxt.textContent = v.replace("https://","").slice(0,46) + "…";
+    await initConverter();
+  });
+
+  // Auto init on load
+  initConverter();
+
+  // ----- SINGLE -----
+  const singleInput = $("singleInput");
+  const singleStatus = $("singleStatus");
+  const singleResult = $("singleResult");
+  const singleTable = $("singleTable");
+  const singleTbody = $("singleTbody");
+  let lastSingle = null;
+
+  function renderSingle(res){
+    lastSingle = res;
+    if(!res){
+      setHtml(singleResult, "Chưa có kết quả.");
+      singleTable.style.display = "none";
+      return;
+    }
+    if(!res.success){
+      setHtml(singleResult, `<div class="line"><span class="k">Lỗi:</span> <span class="v">${esc(res.message || "Không rõ lỗi")}</span></div>`, "err");
+      singleTbody.innerHTML = `
+        <tr><td>success</td><td>false</td></tr>
+        <tr><td>message</td><td>${esc(res.message || "")}</td></tr>
+      `;
+      singleTable.style.display = "";
+      return;
+    }
+
+    setHtml(singleResult, `
+      <div class="line"><span class="k">Địa chỉ cũ:</span><br><span class="v">${esc(res.originalAddress || "")}</span></div>
+      <div class="line"><span class="k">Địa chỉ mới:</span><br><span class="v">${esc(res.convertedAddress || "")}</span></div>
+      <div class="line"><span class="k">Mapping type:</span> <span class="mono">${esc(res.mappingInfo?.mappingType || "")}</span></div>
+    `, "ok");
+
+    singleTbody.innerHTML = `
+      <tr><td>success</td><td>true</td></tr>
+      <tr><td>originalAddress</td><td>${esc(res.originalAddress || "")}</td></tr>
+      <tr><td>convertedAddress</td><td><b>${esc(res.convertedAddress || "")}</b></td></tr>
+      <tr><td>mappingType</td><td>${esc(res.mappingInfo?.mappingType || "")}</td></tr>
+    `;
+    singleTable.style.display = "";
+  }
+
+  $("btnSingleConvert").addEventListener("click", () => {
+    if(!isReady || !converter){
+      setStatus(singleStatus, "Chưa khởi tạo dữ liệu. Vào tab Cấu hình bấm Khởi tạo.", "err");
+      return;
+    }
+    const text = (singleInput.value || "").trim();
+    if(!text){
+      setStatus(singleStatus, "Bạn chưa nhập địa chỉ.", "warn");
+      return;
+    }
+    try{
+      setStatus(singleStatus, "Đang chuyển đổi…", "warn");
+      const res = converter.convertAddress(text);
+      renderSingle(res);
+      setStatus(singleStatus, res?.success ? "Xong ✅" : "Không chuyển đổi được ❌", res?.success ? "ok" : "err");
+    }catch(e){
+      setStatus(singleStatus, "Lỗi: " + (e?.message || e), "err");
+    }
+  });
+
+  $("btnSingleExample").addEventListener("click", () => {
+    singleInput.value = "Phường 12, Quận Gò Vấp, Thành phố Hồ Chí Minh";
+    setStatus(singleStatus, "Đã điền ví dụ. Bấm Chuyển đổi.", "warn");
+  });
+
+  $("btnSingleClear").addEventListener("click", () => {
+    singleInput.value = "";
+    lastSingle = null;
+    setStatus(singleStatus, "Đã xóa.", "ok");
+    setHtml(singleResult, "Chưa có kết quả.");
+    singleTable.style.display = "none";
+  });
+
+  $("btnCopyNew").addEventListener("click", async () => {
+    const newAddr = lastSingle?.convertedAddress || "";
+    if(!newAddr){
+      setStatus(singleStatus, "Chưa có địa chỉ mới để copy.", "warn");
+      return;
+    }
+    await navigator.clipboard.writeText(newAddr);
+    setStatus(singleStatus, "Đã copy địa chỉ mới.", "ok");
+  });
+
+  $("btnCopyJsonSingle").addEventListener("click", async () => {
+    if(!lastSingle){
+      setStatus(singleStatus, "Chưa có JSON để copy.", "warn");
+      return;
+    }
+    await navigator.clipboard.writeText(JSON.stringify(lastSingle, null, 2));
+    setStatus(singleStatus, "Đã copy JSON.", "ok");
+  });
+
+  // ----- BATCH -----
+  const batchInput = $("batchInput");
+  const batchStatus = $("batchStatus");
+  const batchResult = $("batchResult");
+  const batchTable = $("batchTable");
+  const batchTbody = $("batchTbody");
+  let lastBatch = null;
+
+  function parseLines(text){
+    return text.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+  }
+
+  $("btnBatchConvert").addEventListener("click", () => {
+    if(!isReady || !converter){
+      setStatus(batchStatus, "Chưa khởi tạo dữ liệu. Vào tab Cấu hình bấm Khởi tạo.", "err");
+      return;
+    }
+    const lines = parseLines(batchInput.value || "");
+    if(!lines.length){
+      setStatus(batchStatus, "Danh sách trống.", "warn");
+      return;
+    }
+
+    setStatus(batchStatus, `Đang chuyển đổi ${lines.length} dòng…`, "warn");
+    const results = [];
+    for(let i=0;i<lines.length;i++){
+      const oldAddr = lines[i];
+      try{
+        const r = converter.convertAddress(oldAddr);
+        results.push({
+          index: i+1,
+          old: oldAddr,
+          success: !!r?.success,
+          new: r?.convertedAddress || "",
+          message: r?.success ? "" : (r?.message || "Không chuyển đổi được"),
+          raw: r
         });
-    </script>
+      }catch(e){
+        results.push({
+          index: i+1,
+          old: oldAddr,
+          success: false,
+          new: "",
+          message: e?.message || String(e),
+          raw: null
+        });
+      }
+    }
+    lastBatch = results;
+
+    const okCount = results.filter(x => x.success).length;
+    const failCount = results.length - okCount;
+
+    setHtml(batchResult, `
+      <div class="line"><span class="k">Tổng:</span> <span class="v">${results.length}</span></div>
+      <div class="line"><span class="k">Thành công:</span> <span class="v">${okCount}</span></div>
+      <div class="line"><span class="k">Thất bại:</span> <span class="v">${failCount}</span></div>
+    `, okCount ? "ok" : "warn");
+
+    batchTbody.innerHTML = results.map(r => `
+      <tr>
+        <td class="mono">${r.index}</td>
+        <td>${esc(r.old)}</td>
+        <td>${r.success ? "<b>"+esc(r.new)+"</b>" : "<span class='muted'>(trống)</span>"}</td>
+        <td class="mono">${r.success ? "OK" : "FAIL: " + esc(r.message)}</td>
+      </tr>
+    `).join("");
+    batchTable.style.display = "";
+
+    setStatus(batchStatus, "Xong ✅", "ok");
+  });
+
+  $("btnBatchExample").addEventListener("click", () => {
+    batchInput.value =
+`Phường 12, Quận Gò Vấp, Thành phố Hồ Chí Minh
+Phường 15, Quận 10, TP.HCM
+Phường An Lạc, Quận Bình Tân, TP.HCM`;
+    setStatus(batchStatus, "Đã dán ví dụ. Bấm Chuyển đổi hàng loạt.", "warn");
+  });
+
+  $("btnBatchClear").addEventListener("click", () => {
+    batchInput.value = "";
+    lastBatch = null;
+    batchTable.style.display = "none";
+    setHtml(batchResult, "Chưa có kết quả.");
+    setStatus(batchStatus, "Đã xóa.", "ok");
+  });
+
+  $("btnCopyJsonBatch").addEventListener("click", async () => {
+    if(!lastBatch){
+      setStatus(batchStatus, "Chưa có JSON để copy.", "warn");
+      return;
+    }
+    // Keep only useful fields
+    const compact = lastBatch.map(r => ({
+      index: r.index, old: r.old, new: r.new, success: r.success, message: r.message
+    }));
+    await navigator.clipboard.writeText(JSON.stringify(compact, null, 2));
+    setStatus(batchStatus, "Đã copy JSON batch.", "ok");
+  });
+
+  $("btnCopyCsv").addEventListener("click", async () => {
+    if(!lastBatch){
+      setStatus(batchStatus, "Chưa có dữ liệu để copy CSV.", "warn");
+      return;
+    }
+    const rows = [["old","new","success","message"]];
+    lastBatch.forEach(r => rows.push([r.old, r.new, r.success, r.message]));
+    await navigator.clipboard.writeText(toCsv(rows));
+    setStatus(batchStatus, "Đã copy CSV.", "ok");
+  });
+})();
+</script>
 </body>
 </html>
