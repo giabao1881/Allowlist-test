@@ -3,12 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>baotg10 | Đổi địa chỉ cũ → mới (Vietnam Address Converter)</title>
+  <title>baotg10 | Đổi địa chỉ cũ → mới (vietnam-address-converter)</title>
 
-  <!-- Library from repo (Browser build) -->
+  <!-- Browser build của vietnam-address-converter -->
   <script src="https://unpkg.com/vietnam-address-converter@latest/dist/index.browser.js"></script>
-  <!-- Data mapping (repo recommends loading from vietnam-address-database CDN) -->
-  <!-- We'll fetch this in JS via initializeFromUrl(...) -->
 
   <style>
     :root{
@@ -21,7 +19,7 @@
       --ok:#22c55e; --err:#ef4444; --warn:#f59e0b;
       --shadow: 0 18px 60px rgba(0,0,0,.55);
       --r:18px; --r2:12px;
-      --w: 980px;
+      --w: 1040px;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
       --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
     }
@@ -173,12 +171,12 @@
         <div class="logo" aria-hidden="true"></div>
         <div>
           <h1>Đổi địa chỉ cũ → mới</h1>
-          <div class="sub">Chạy theo thư viện quangtam/vietnam-address-converter (không cần API key)</div>
+          <div class="sub">Dùng quangtam/vietnam-address-converter — sửa lỗi object hiển thị</div>
         </div>
       </div>
       <div class="pill">
-        <span class="muted">Database</span>
-        <span class="mono" id="dbUrlTxt">unpkg vietnam-address-database</span>
+        <span class="muted">DB</span>
+        <span class="mono" id="dbPill"></span>
       </div>
     </div>
 
@@ -208,7 +206,7 @@
               </div>
 
               <div class="hint">
-                Thư viện hỗ trợ convert từ string và trả kết quả gồm: success, originalAddress, convertedAddress, mappingInfo/message. :contentReference[oaicite:1]{index=1}
+                Lưu ý: kết quả trả về có thể là object. Tool này sẽ tự format thành chuỗi.
               </div>
 
               <div class="status" id="singleStatus">Sẵn sàng.</div>
@@ -253,7 +251,7 @@ Phường 15, Quận 10, TP.HCM"></textarea>
                 <button class="danger" id="btnBatchClear">Xóa</button>
               </div>
 
-              <div class="hint">Batch chạy offline trong trình duyệt: tool sẽ convert từng dòng và tổng hợp bảng kết quả.</div>
+              <div class="hint">Batch chạy offline: convert từng dòng, xuất bảng + CSV.</div>
               <div class="status" id="batchStatus">Sẵn sàng.</div>
             </div>
 
@@ -288,27 +286,25 @@ Phường 15, Quận 10, TP.HCM"></textarea>
             <div class="box">
               <h2>Cấu hình nguồn dữ liệu mapping</h2>
 
-              <label>URL address.json (vietnam-address-database)</label>
+              <label>URL address.json</label>
               <input id="dbUrl" />
 
               <div class="btns">
                 <button class="primary" id="btnInit">Khởi tạo / Nạp lại dữ liệu</button>
-                <button id="btnResetDb">Reset về mặc định</button>
+                <button id="btnResetDb">Reset mặc định</button>
               </div>
 
               <div class="hint">
-                Theo README: browser dùng <span class="mono">initializeFromUrl('https://unpkg.com/vietnam-address-database@latest/address.json')</span>. :contentReference[oaicite:2]{index=2}
+                Mặc định dùng database từ unpkg: <span class="mono">vietnam-address-database@latest/address.json</span>
               </div>
 
               <div class="status" id="initStatus">Chưa khởi tạo.</div>
             </div>
 
             <div class="box">
-              <h2>Ghi chú</h2>
+              <h2>Debug nhanh</h2>
               <div class="status result">
-                <div class="line"><span class="k">Không cần API key</span> — chạy hoàn toàn client-side.</div>
-                <div class="line"><span class="k">Nguồn dữ liệu</span> — lấy từ CDN của <span class="mono">vietnam-address-database</span> để đồng bộ bản mới. :contentReference[oaicite:3]{index=3}</div>
-                <div class="line"><span class="k">Lưu ý</span> — nếu bạn host lên GitHub Pages, vẫn chạy bình thường vì chỉ là HTML+JS.</div>
+                Nếu vẫn không map ra, hãy bấm “Copy JSON” rồi dán JSON vào chat để mình chỉnh format/đọc field đúng schema bạn đang nhận.
               </div>
             </div>
           </div>
@@ -320,7 +316,7 @@ Phường 15, Quận 10, TP.HCM"></textarea>
 
 <script>
 (() => {
-  // ----- Tabs -----
+  // ---------------- Tabs ----------------
   const tabs = Array.from(document.querySelectorAll(".tab"));
   const panes = {
     single: document.getElementById("pane-single"),
@@ -334,8 +330,11 @@ Phường 15, Quận 10, TP.HCM"></textarea>
     Object.entries(panes).forEach(([k,el]) => el.style.display = (k === tab) ? "" : "none");
   }));
 
-  // ----- Helpers -----
+  // ---------------- Helpers ----------------
   const $ = (id) => document.getElementById(id);
+  const esc = (s) => (s ?? "").toString().replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
   const setStatus = (el, msg, type="") => {
     el.classList.remove("ok","err","warn");
     if(type) el.classList.add(type);
@@ -346,12 +345,68 @@ Phường 15, Quận 10, TP.HCM"></textarea>
     if(type) el.classList.add(type);
     el.innerHTML = html;
   };
-  const esc = (s) => (s ?? "").toString().replace(/[&<>"']/g, m => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[m]));
-  const toCsv = (rows) => rows.map(r => r.map(v => `"${String(v ?? "").replaceAll('"','""')}"`).join(",")).join("\n");
+  const toCsv = (rows) =>
+    rows.map(r => r.map(v => `"${String(v ?? "").replaceAll('"','""')}"`).join(",")).join("\n");
+  const parseLines = (text) => (text || "").split(/\r?\n/).map(x => x.trim()).filter(Boolean);
 
-  // ----- Converter -----
+  // ✅ FIX CHÍNH: format object -> string address
+  function bestStringFromObject(obj){
+    // ưu tiên các key hay gặp
+    const directKeys = [
+      "fullAddress","full_address","full_name","fullName","address","name","text","value"
+    ];
+    for(const k of directKeys){
+      if(obj && obj[k] != null && String(obj[k]).trim() !== "") return String(obj[k]).trim();
+    }
+    return "";
+  }
+
+  function pickAreaName(area){
+    if(!area || typeof area !== "object") return "";
+    const type = bestStringFromObject({fullAddress: area.type, name: area.type});
+    const name = bestStringFromObject({fullAddress: area.name, name: area.name, full_name: area.full_name});
+    if(type && name) return `${type} ${name}`.trim();
+    return (name || type || "").trim();
+  }
+
+  function formatAddress(val){
+    if(val == null) return "";
+    if(typeof val === "string") return val.trim();
+
+    if(typeof val === "object"){
+      // 1) nếu object có sẵn fullAddress/full_name/address -> lấy luôn
+      const direct = bestStringFromObject(val);
+      if(direct) return direct;
+
+      // 2) thử dựng từ các field hành chính hay gặp
+      const parts = [];
+
+      const street = bestStringFromObject({street: val.street, streetAddress: val.streetAddress, address: val.streetAddress});
+      if(street) parts.push(street);
+
+      // ward/district/province có thể nằm ở nhiều tên khác nhau
+      const ward = val.ward || val.newWard || val.wardInfo || val.new_ward;
+      const district = val.district || val.districtInfo || val.oldDistrict || val.old_district;
+      const province = val.province || val.provinceInfo || val.newProvince || val.new_province;
+
+      const w = pickAreaName(ward);
+      const d = pickAreaName(district);
+      const p = pickAreaName(province);
+
+      if(w) parts.push(w);
+      if(d) parts.push(d);
+      if(p) parts.push(p);
+
+      if(parts.length) return parts.join(", ");
+
+      // 3) fallback: stringify gọn
+      try { return JSON.stringify(val); } catch { return String(val); }
+    }
+
+    return String(val).trim();
+  }
+
+  // ---------------- Converter Init ----------------
   let converter = null;
   let isReady = false;
 
@@ -359,15 +414,16 @@ Phường 15, Quận 10, TP.HCM"></textarea>
   const KEY_DB_URL = "baotg10_vac_db_url";
 
   const dbUrlInput = $("dbUrl");
-  const dbUrlTxt = $("dbUrlTxt");
+  const dbPill = $("dbPill");
   const libState = $("libState");
   const initStatus = $("initStatus");
 
-  function getDbUrl(){
-    return localStorage.getItem(KEY_DB_URL) || DB_URL_DEFAULT;
-  }
-  function setDbUrl(v){
-    localStorage.setItem(KEY_DB_URL, v);
+  function getDbUrl(){ return localStorage.getItem(KEY_DB_URL) || DB_URL_DEFAULT; }
+  function setDbUrl(v){ localStorage.setItem(KEY_DB_URL, v); }
+
+  function pillText(url){
+    const u = (url || "").replace("https://","").replace("http://","");
+    return u.length > 44 ? (u.slice(0,44) + "…") : u;
   }
 
   async function initConverter(){
@@ -386,10 +442,9 @@ Phường 15, Quận 10, TP.HCM"></textarea>
     libState.textContent = "Đang khởi tạo…";
     try{
       converter = new window.VietnamAddressConverter.VietnamAddressConverter();
-      // Repo README: initializeFromUrl('https://unpkg.com/vietnam-address-database@latest/address.json')
       await converter.initializeFromUrl(dbUrl);
       isReady = true;
-      setStatus(initStatus, "Khởi tạo xong. Dữ liệu đã sẵn sàng.", "ok");
+      setStatus(initStatus, "Khởi tạo xong ✅", "ok");
       libState.textContent = "Sẵn sàng ✅";
     }catch(e){
       isReady = false;
@@ -398,28 +453,28 @@ Phường 15, Quận 10, TP.HCM"></textarea>
     }
   }
 
-  // Fill settings initial
+  // load settings
   dbUrlInput.value = getDbUrl();
-  dbUrlTxt.textContent = dbUrlInput.value.replace("https://","").slice(0,46) + "…";
+  dbPill.textContent = pillText(dbUrlInput.value);
 
   $("btnResetDb").addEventListener("click", () => {
     dbUrlInput.value = DB_URL_DEFAULT;
     setDbUrl(DB_URL_DEFAULT);
-    dbUrlTxt.textContent = dbUrlInput.value.replace("https://","").slice(0,46) + "…";
-    setStatus(initStatus, "Đã reset URL dữ liệu. Bấm Khởi tạo.", "warn");
+    dbPill.textContent = pillText(DB_URL_DEFAULT);
+    setStatus(initStatus, "Đã reset. Bấm Khởi tạo để nạp lại.", "warn");
   });
 
   $("btnInit").addEventListener("click", async () => {
     const v = (dbUrlInput.value || "").trim();
     setDbUrl(v);
-    dbUrlTxt.textContent = v.replace("https://","").slice(0,46) + "…";
+    dbPill.textContent = pillText(v);
     await initConverter();
   });
 
-  // Auto init on load
+  // auto init
   initConverter();
 
-  // ----- SINGLE -----
+  // ---------------- SINGLE ----------------
   const singleInput = $("singleInput");
   const singleStatus = $("singleStatus");
   const singleResult = $("singleResult");
@@ -429,13 +484,22 @@ Phường 15, Quận 10, TP.HCM"></textarea>
 
   function renderSingle(res){
     lastSingle = res;
+
     if(!res){
       setHtml(singleResult, "Chưa có kết quả.");
       singleTable.style.display = "none";
       return;
     }
+
+    const oldText = formatAddress(res.originalAddress);
+    const newText = formatAddress(res.convertedAddress);
+    const mappingType = res.mappingInfo?.mappingType || res.mappingType || "";
+
     if(!res.success){
-      setHtml(singleResult, `<div class="line"><span class="k">Lỗi:</span> <span class="v">${esc(res.message || "Không rõ lỗi")}</span></div>`, "err");
+      setHtml(singleResult,
+        `<div class="line"><span class="k">Lỗi:</span> <span class="v">${esc(res.message || "Không rõ lỗi")}</span></div>`,
+        "err"
+      );
       singleTbody.innerHTML = `
         <tr><td>success</td><td>false</td></tr>
         <tr><td>message</td><td>${esc(res.message || "")}</td></tr>
@@ -445,16 +509,16 @@ Phường 15, Quận 10, TP.HCM"></textarea>
     }
 
     setHtml(singleResult, `
-      <div class="line"><span class="k">Địa chỉ cũ:</span><br><span class="v">${esc(res.originalAddress || "")}</span></div>
-      <div class="line"><span class="k">Địa chỉ mới:</span><br><span class="v">${esc(res.convertedAddress || "")}</span></div>
-      <div class="line"><span class="k">Mapping type:</span> <span class="mono">${esc(res.mappingInfo?.mappingType || "")}</span></div>
+      <div class="line"><span class="k">Địa chỉ cũ:</span><br><span class="v">${esc(oldText || "(không có)")}</span></div>
+      <div class="line"><span class="k">Địa chỉ mới:</span><br><span class="v">${esc(newText || "(không có)")}</span></div>
+      <div class="line"><span class="k">Mapping type:</span> <span class="mono">${esc(mappingType || "(không có)")}</span></div>
     `, "ok");
 
     singleTbody.innerHTML = `
       <tr><td>success</td><td>true</td></tr>
-      <tr><td>originalAddress</td><td>${esc(res.originalAddress || "")}</td></tr>
-      <tr><td>convertedAddress</td><td><b>${esc(res.convertedAddress || "")}</b></td></tr>
-      <tr><td>mappingType</td><td>${esc(res.mappingInfo?.mappingType || "")}</td></tr>
+      <tr><td>originalAddress</td><td>${esc(oldText)}</td></tr>
+      <tr><td>convertedAddress</td><td><b>${esc(newText)}</b></td></tr>
+      <tr><td>mappingType</td><td>${esc(mappingType)}</td></tr>
     `;
     singleTable.style.display = "";
   }
@@ -493,7 +557,7 @@ Phường 15, Quận 10, TP.HCM"></textarea>
   });
 
   $("btnCopyNew").addEventListener("click", async () => {
-    const newAddr = lastSingle?.convertedAddress || "";
+    const newAddr = formatAddress(lastSingle?.convertedAddress);
     if(!newAddr){
       setStatus(singleStatus, "Chưa có địa chỉ mới để copy.", "warn");
       return;
@@ -511,7 +575,7 @@ Phường 15, Quận 10, TP.HCM"></textarea>
     setStatus(singleStatus, "Đã copy JSON.", "ok");
   });
 
-  // ----- BATCH -----
+  // ---------------- BATCH ----------------
   const batchInput = $("batchInput");
   const batchStatus = $("batchStatus");
   const batchResult = $("batchResult");
@@ -519,16 +583,12 @@ Phường 15, Quận 10, TP.HCM"></textarea>
   const batchTbody = $("batchTbody");
   let lastBatch = null;
 
-  function parseLines(text){
-    return text.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
-  }
-
   $("btnBatchConvert").addEventListener("click", () => {
     if(!isReady || !converter){
       setStatus(batchStatus, "Chưa khởi tạo dữ liệu. Vào tab Cấu hình bấm Khởi tạo.", "err");
       return;
     }
-    const lines = parseLines(batchInput.value || "");
+    const lines = parseLines(batchInput.value);
     if(!lines.length){
       setStatus(batchStatus, "Danh sách trống.", "warn");
       return;
@@ -536,6 +596,7 @@ Phường 15, Quận 10, TP.HCM"></textarea>
 
     setStatus(batchStatus, `Đang chuyển đổi ${lines.length} dòng…`, "warn");
     const results = [];
+
     for(let i=0;i<lines.length;i++){
       const oldAddr = lines[i];
       try{
@@ -543,8 +604,8 @@ Phường 15, Quận 10, TP.HCM"></textarea>
         results.push({
           index: i+1,
           old: oldAddr,
+          new: formatAddress(r?.convertedAddress),
           success: !!r?.success,
-          new: r?.convertedAddress || "",
           message: r?.success ? "" : (r?.message || "Không chuyển đổi được"),
           raw: r
         });
@@ -552,13 +613,14 @@ Phường 15, Quận 10, TP.HCM"></textarea>
         results.push({
           index: i+1,
           old: oldAddr,
-          success: false,
           new: "",
+          success: false,
           message: e?.message || String(e),
           raw: null
         });
       }
     }
+
     lastBatch = results;
 
     const okCount = results.filter(x => x.success).length;
@@ -578,8 +640,8 @@ Phường 15, Quận 10, TP.HCM"></textarea>
         <td class="mono">${r.success ? "OK" : "FAIL: " + esc(r.message)}</td>
       </tr>
     `).join("");
-    batchTable.style.display = "";
 
+    batchTable.style.display = "";
     setStatus(batchStatus, "Xong ✅", "ok");
   });
 
@@ -604,7 +666,7 @@ Phường An Lạc, Quận Bình Tân, TP.HCM`;
       setStatus(batchStatus, "Chưa có JSON để copy.", "warn");
       return;
     }
-    // Keep only useful fields
+    // compact
     const compact = lastBatch.map(r => ({
       index: r.index, old: r.old, new: r.new, success: r.success, message: r.message
     }));
@@ -622,6 +684,7 @@ Phường An Lạc, Quận Bình Tân, TP.HCM`;
     await navigator.clipboard.writeText(toCsv(rows));
     setStatus(batchStatus, "Đã copy CSV.", "ok");
   });
+
 })();
 </script>
 </body>
