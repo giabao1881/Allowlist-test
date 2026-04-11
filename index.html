@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Chuyển Đổi Địa Chỉ Cũ → Mới (Hàng loạt)</title>
 
   <script src="https://unpkg.com/vietnam-address-converter@latest/dist/index.browser.js"></script>
@@ -30,7 +30,7 @@
         radial-gradient(900px 520px at 80% 10%, rgba(255,255,255,.18), transparent 55%),
         linear-gradient(135deg, var(--bg1), var(--bg2));
     }
-    .wrap{width:min(1100px,100%);}
+    .wrap{width:min(1120px,100%);}
     .card{background:var(--card); border-radius:var(--r); box-shadow:var(--shadow); padding:24px;}
     .title{
       display:flex; align-items:center; justify-content:center; gap:12px;
@@ -116,7 +116,7 @@
       user-select:none;
     }
     .opt input{width:16px; height:16px;}
-    .hint{font-weight:700; color:rgba(15,23,42,.65); font-size:12px; margin-top:8px;}
+    .hint{font-weight:700; color:rgba(15,23,42,.65); font-size:12px; margin-top:8px; line-height:1.45;}
     .smallNote{font-size:12px; color:#64748b; margin-top:8px; line-height:1.45;}
     .mono{font-family:var(--mono);}
   </style>
@@ -126,21 +126,27 @@
   <div class="wrap">
     <div class="card">
       <div class="title"><div class="icon">⇄</div><div>Chuyển Đổi Địa Chỉ Cũ → Mới</div></div>
-      <div class="sub">Hàng loạt • mỗi dòng 1 địa chỉ • giữ số nhà/đường/ấp • viết tắt được mở rộng mạnh hơn</div>
+      <div class="sub">Hàng loạt • mỗi dòng 1 địa chỉ • ưu tiên đúng hơn là đoán quá tay</div>
 
       <label>Danh sách địa chỉ (mỗi dòng 1 địa chỉ):</label>
-      <textarea id="batchInput" placeholder="Ví dụ:\n34 ap Binh Long, xa thanh binh, huyen cho gao, tinh tien giang\nP4, Q3, TP HCM\nTP. HCM, Q.1, P.2\nq10 - p15 - tphcm\nsg, q1, p2"></textarea>
+      <textarea id="batchInput" placeholder="Ví dụ:
+34 ap Binh Long, xa thanh binh, huyen cho gao, tinh tien giang
+P4, Q3, TP HCM
+TP. HCM, Q.1, P.2
+q10 - p15 - tphcm
+sg, q1, p2"></textarea>
 
       <div class="options">
-        <label class="opt" title="Chuẩn hóa viết tắt mạnh: TP HCM / HCM / SG / Sài Gòn / Q3 / P4..."><input type="checkbox" id="optAggressive" checked>Chuẩn hóa viết tắt mạnh</label>
-        <label class="opt" title="Chỉ viết hoa phần chữ đầu, không tự đoán dấu cho tên đường/ấp."><input type="checkbox" id="optBeautifyStreet" checked>Viết hoa phần số nhà/đường</label>
-        <label class="opt" title="Nếu fail thì thử nhiều biến thể (raw / chuẩn hóa / không dấu)."><input type="checkbox" id="optTryMany" checked>Thử nhiều biến thể khi đổi</label>
+        <label class="opt" title="Mở rộng các viết tắt phổ biến như TP HCM / HCM / SG / Q3 / P4..."><input type="checkbox" id="optAggressive" checked>Chuẩn hóa viết tắt mạnh</label>
+        <label class="opt" title="Nếu fail thì thử nhiều biến thể khác nhau."><input type="checkbox" id="optTryMany" checked>Thử nhiều biến thể khi đổi</label>
+        <label class="opt" title="Chỉ viết hoa chữ đầu trong kết quả hiển thị."><input type="checkbox" id="optPretty" checked>Viết hoa kết quả</label>
       </div>
+
       <div class="hint">
-        Tool chỉ thêm dấu chắc chắn cho phần hành chính theo database. Phần tên đường/ấp nhập không dấu thì không tự đoán dấu để tránh sai.
+        Bản này không tách street/admin quá sớm nữa, vì chỗ đó dễ làm sai kết quả. Nó sẽ thử convert trên cả dòng, rồi mới hiển thị kết quả chuẩn hóa.
       </div>
       <div class="smallNote">
-        Mẹo: Nếu địa chỉ có dạng <span class="mono">Q.1, P.2</span> hoặc <span class="mono">TP. HCM</span>, bản này sẽ tự hiểu tốt hơn.
+        Hỗ trợ tốt hơn cho các dạng: <span class="mono">TP. HCM</span>, <span class="mono">Q.1</span>, <span class="mono">P.2</span>, <span class="mono">SG</span>, <span class="mono">Sài Gòn</span>.
       </div>
 
       <button id="btnBatch" class="btn">⇄ Chuyển đổi hàng loạt</button>
@@ -203,7 +209,7 @@
 
   function escapeHtml(s){
     return (s ?? "").toString().replace(/[&<>"']/g, m => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
     }[m]));
   }
 
@@ -224,103 +230,58 @@
       .replace(/(\d)([a-zA-ZÀ-ỹĐđ])/g, "$1 $2");
   }
 
-  function chuanHoaDauCach(s){
+  function normalizePunctuation(s){
     return chuanHoaText((s || "")
       .replace(/[|;/]+/g, ",")
-      .replace(/\s*,\s*/g, ", ")
+      .replace(/\s*[,]+\s*/g, ", ")
+      .replace(/[–—]+/g, "-")
       .replace(/\s{2,}/g, " "));
   }
 
   function decomposeForMatch(s){
-    return boDauTiengViet(chuanHoaText(s)).toLowerCase().replace(/\s*\.\s*/g, ".").replace(/\s+/g, " ");
+    return boDauTiengViet(chuanHoaText(s))
+      .toLowerCase()
+      .replace(/\s*\.\s*/g, ".")
+      .replace(/\s+/g, " ");
   }
 
-  // Mở rộng viết tắt tốt hơn, ưu tiên tránh match sai
   function moRongVietTat(s){
     if(!s) return "";
     let x = " " + tachChuSoDinhNhau(s) + " ";
     x = decomposeForMatch(x);
 
-    // TP trực thuộc trung ương
     x = x.replace(/\b(tp\.?(?:\s|\.)*hcm|tphcm|tp ho chi minh|ho chi minh|hcm|sg|sai gon)\b/g, " thanh pho ho chi minh ");
     x = x.replace(/\b(tp\.?(?:\s|\.)*hn|tphn|tp ha noi|ha noi|hn)\b/g, " thanh pho ha noi ");
     x = x.replace(/\b(tp\.?(?:\s|\.)*dn|tp da nang|da nang|danang)\b/g, " thanh pho da nang ");
     x = x.replace(/\b(tp\.?(?:\s|\.)*hp|tp hai phong|hai phong|haiphong)\b/g, " thanh pho hai phong ");
     x = x.replace(/\b(tp\.?(?:\s|\.)*ct|tp can tho|can tho|cantho)\b/g, " thanh pho can tho ");
 
-    // Quận / phường / huyện / thị xã / thị trấn
     x = x.replace(/\bq\.?\s*(\d+)\b/g, " quan $1 ");
     x = x.replace(/\bquan\s*(\d+)\b/g, " quan $1 ");
     x = x.replace(/\bp\.?\s*(\d+)\b/g, " phuong $1 ");
     x = x.replace(/\bphuong\s*(\d+)\b/g, " phuong $1 ");
-    x = x.replace(/\bh\.?\s*(\d+|[a-zà-ỹđ][a-z0-9à-ỹđ\s]*)\b/g, " huyen $1 ");
+
+    x = x.replace(/\bh\.?\s*(\d+)\b/g, " huyen $1 ");
     x = x.replace(/\btx\.?\b/g, " thi xa ");
     x = x.replace(/\btt\.?\b/g, " thi tran ");
-
-    // Từ hành chính đầy đủ cũng chuẩn hóa về dạng dễ parse
     x = x.replace(/\btp\.?\b/g, " thanh pho ");
-    x = x.replace(/\btinh\b/g, " tinh ");
 
     return chuanHoaText(x);
   }
 
-  function coTuHanhChinh(token){
-    const t = decomposeForMatch(token);
-    return /\b(xa|phuong|thi tran|thi xa|huyen|quan|tinh|thanh pho)\b/.test(t);
-  }
-
-  function tachStreetVaHanhChinh(input){
+  function buildCandidates(input, aggressive){
     const raw = chuanHoaText(input);
-    if(!raw) return { street:"", admin:"" };
-
-    const normalized = chuanHoaText(raw).replace(/[–—]/g, "-");
-    const parts = normalized.split(",").map(chuanHoaText).filter(Boolean);
-
-    // Nếu có dấu phẩy, phần đầu thường là street, phần sau là hành chính
-    if(parts.length > 1){
-      if(!coTuHanhChinh(parts[0])){
-        return { street: parts[0], admin: parts.slice(1).join(", ") };
-      }
-      return { street:"", admin: parts.join(", ") };
-    }
-
-    // Nếu không có dấu phẩy, dò từ khóa hành chính để tách
-    const tokens = raw.split(/\s+/);
-    let idx = -1;
-    for(let i=0;i<tokens.length;i++){
-      const one = tokens[i];
-      const two = tokens.slice(i, i+2).join(" ");
-      const three = tokens.slice(i, i+3).join(" ");
-      if(coTuHanhChinh(one) || coTuHanhChinh(two) || coTuHanhChinh(three)){
-        idx = i;
-        break;
-      }
-    }
-
-    if(idx > 0){
-      return {
-        street: chuanHoaText(tokens.slice(0, idx).join(" ")).replace(/[,-]+$/, "").trim(),
-        admin: chuanHoaText(tokens.slice(idx).join(" "))
-      };
-    }
-
-    return { street:"", admin: raw };
+    const p1 = normalizePunctuation(raw);
+    const p2 = aggressive ? moRongVietTat(p1) : p1;
+    const p3 = boDauTiengViet(p2);
+    const p4 = aggressive ? moRongVietTat(raw) : raw;
+    return [...new Set([raw, p1, p2, p3, p4].map(chuanHoaText).filter(Boolean))];
   }
 
   function vietHoaDauTu(s){
     s = chuanHoaText(s);
     if(!s) return "";
     return s.split(" ").map(w => w ? w[0].toUpperCase() + w.slice(1) : w).join(" ");
-  }
-
-  function beautifyStreetNoAccent(s){
-    s = chuanHoaText(s);
-    if(!s) return "";
-    return s.split(" ").map(w => {
-      if(!w) return w;
-      if(/[0-9]/.test(w) || /[\/\-]/.test(w)) return w;
-      return w[0].toUpperCase() + w.slice(1);
-    }).join(" ");
   }
 
   function chuanHoaTinhTP(province){
@@ -338,10 +299,10 @@
 
   function formatAddressObject(obj){
     if(!obj || typeof obj !== "object") return "";
+    const street = chuanHoaText(obj.street || obj.streetAddress);
     const ward = chuanHoaText(obj.ward);
     const district = chuanHoaText(obj.district);
     const province = chuanHoaText(obj.province);
-    const street = chuanHoaText(obj.street || obj.streetAddress);
 
     const parts = [];
     if(street) parts.push(vietHoaDauTu(street));
@@ -351,13 +312,9 @@
     return parts.join(", ");
   }
 
-  function buildCandidates(input, aggressive){
-    const raw = chuanHoaText(input);
-    const sep = chuanHoaDauCach(raw);
-    const exp = aggressive ? chuanHoaDauCach(moRongVietTat(sep)) : sep;
-    const noAcc = boDauTiengViet(exp);
-    const list = [raw, sep, exp, noAcc].map(chuanHoaText).filter(Boolean);
-    return [...new Set(list)];
+  function formatRawLine(line, pretty){
+    const cleaned = normalizePunctuation(line);
+    return pretty ? vietHoaDauTu(cleaned) : cleaned;
   }
 
   let converter = null;
@@ -381,8 +338,8 @@
     }
   }
 
-  function tryConvertBest(adminInput, aggressive, tryMany){
-    const cands = tryMany ? buildCandidates(adminInput, aggressive) : [chuanHoaText(adminInput)];
+  function tryConvertBest(fullLine, aggressive, tryMany){
+    const cands = tryMany ? buildCandidates(fullLine, aggressive) : [chuanHoaText(fullLine)];
     let bestFail = null;
 
     for(const s of cands){
@@ -392,60 +349,50 @@
         bestFail = bestFail || r;
       }catch(e){}
     }
-    return { ok:false, used:(cands[0] || ""), res: bestFail || {success:false, message:"Không chuyển đổi được"} };
+
+    return {
+      ok:false,
+      used:(cands[0] || ""),
+      res: bestFail || { success:false, message:"Không chuyển đổi được" }
+    };
   }
 
   $("btnBatch").addEventListener("click", () => {
     if(!ready) return setStatus("warn", "Chưa sẵn sàng", "Đang tải dữ liệu…");
+
     const lines = ($("batchInput").value || "").split(/\r?\n/).map(chuanHoaText).filter(Boolean);
     if(!lines.length) return setStatus("warn", "Danh sách trống", "Mỗi dòng 1 địa chỉ.");
 
     const aggressive = $("optAggressive").checked;
-    const beautifyStreet = $("optBeautifyStreet").checked;
     const tryMany = $("optTryMany").checked;
+    const pretty = $("optPretty").checked;
 
     setStatus("warn", "Đang xử lý…", `Đang đổi ${lines.length} dòng`);
+
     const rows = [];
     let okCount = 0;
 
     for(let i=0;i<lines.length;i++){
       const raw = lines[i];
-      const t = tachStreetVaHanhChinh(raw);
-      const adminInput = aggressive ? moRongVietTat(t.admin || raw) : (t.admin || raw);
-      const payload = tryConvertBest(adminInput, aggressive, tryMany);
+      const payload = tryConvertBest(raw, aggressive, tryMany);
       if(payload.ok) okCount++;
 
-      let oldLine = chuanHoaDauCach(raw);
-      let newLine = "";
-      let msg = payload.ok ? "" : (payload.res?.message || "Không chuyển đổi được");
-
-      if(payload.ok){
-        const oldObj = payload.res.originalAddress || {};
-        const newObj = payload.res.convertedAddress || {};
-
-        let street = t.street || (oldObj.street || oldObj.streetAddress || "");
-        if(beautifyStreet) street = beautifyStreetNoAccent(street);
-
-        const oldOut = { ward: oldObj.ward, district: oldObj.district, province: oldObj.province, street };
-        const newOut = { ward: newObj.ward, district: newObj.district, province: newObj.province, street };
-
-        oldLine = formatAddressObject(oldOut);
-        newLine = formatAddressObject(newOut);
-      }
+      const oldLine = formatRawLine(raw, pretty);
+      const newLine = payload.ok ? formatAddressObject(payload.res.convertedAddress || {}) : "";
 
       rows.push({
-        index:i+1,
+        index: i + 1,
         oldLine,
         newLine,
         success: payload.ok,
-        message: msg,
+        message: payload.ok ? "" : (payload.res?.message || "Không chuyển đổi được"),
         used: payload.used
       });
     }
 
     lastBatch = rows;
-
     const failCount = rows.length - okCount;
+
     $("batchWrap").style.display = "block";
     $("batchTotal").textContent = rows.length;
     $("batchOk").textContent = okCount;
@@ -475,7 +422,7 @@
       document.body.appendChild(ta);
       ta.select();
       let ok = false;
-      try{ ok = document.execCommand("copy"); }catch(_){ }
+      try{ ok = document.execCommand("copy"); }catch(_){}
       document.body.removeChild(ta);
       return ok;
     }
